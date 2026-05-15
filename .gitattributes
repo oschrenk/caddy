@@ -1,0 +1,2 @@
+*.cott.age binary export-ignore filter=cottage-encrypted -diff
+Assets/**.cott.age filter=lfs diff=lfs merge=lfs -text

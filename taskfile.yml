@@ -1,0 +1,33 @@
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - task: build
+
+  build:
+    desc: Build the project
+    cmds:
+      - swift build
+
+  run:
+    desc: Build and run, producing caddy.3mf
+    cmds:
+      - swift run caddy
+
+  clean:
+    desc: Remove build artifacts and generated models
+    cmds:
+      - swift package clean
+      - rm -rf .build
+      - rm -f caddy.3mf
+
+  resolve:
+    desc: Resolve Swift package dependencies
+    cmds:
+      - swift package resolve
+
+  update:
+    desc: Update Swift package dependencies
+    cmds:
+      - swift package update

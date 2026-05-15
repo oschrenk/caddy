@@ -1,0 +1,9 @@
+.build/
+.swiftpm/
+*.3mf
+*.svg
+Cutlist.md
+/.cottage/identity
+/Assets/Headphones.stl
+/Assets/Tower.stl
+/Assets/Raspberry Pi 4 Model B.stl
