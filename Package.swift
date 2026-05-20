@@ -6,7 +6,7 @@ let package = Package(
     platforms: [.macOS(.v14)],
     dependencies: [
         // see https://github.com/tomasf/Cadova
-        .package(url: "https://github.com/tomasf/Cadova.git", .upToNextMinor(from: "0.6.1")),
+        .package(url: "https://github.com/tomasf/Cadova.git", branch: "dev"),
         // see https://github.com/tomasf/Helical
         .package(url: "https://github.com/tomasf/Helical.git", from: "1.0.1"),
     ],
