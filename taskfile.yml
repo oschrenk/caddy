@@ -31,3 +31,9 @@ tasks:
     desc: Update Swift package dependencies
     cmds:
       - swift package update
+
+  decrypt:
+    desc: Pull encrypted assets from LFS and decrypt them
+    cmds:
+      - git lfs pull
+      - ctg decrypt Assets/*.cott.age
