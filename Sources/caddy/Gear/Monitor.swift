@@ -18,8 +18,8 @@ struct Monitor: Shape3D {
     let screenBottomZ: Double   // bottom edge of screen above the base top
 
     init(
-        screenWidth: Double = 614,    // ~27" 16:9 panel incl. bezels
-        screenHeight: Double = 365,
+        screenWidth: Double = 568,    // display + bezel
+        screenHeight: Double = 331,
         screenThickness: Double = 50,
         neckWidth: Double = 60,
         neckDepth: Double = 30,

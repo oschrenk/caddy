@@ -2,6 +2,7 @@
 .swiftpm/
 *.3mf
 *.svg
+/caddy.stl
 Cutlist.md
 /.cottage/identity
 /Assets/Headphones.stl

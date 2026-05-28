@@ -1,19 +1,40 @@
 import Cadova
 
-// 2D nesting layout for cutting all 9 frame pieces from a single 12mm plywood
-// sheet. Pieces are arranged in two columns starting from the top edge of the
-// sheet, with a `kerf` gap between adjacent pieces (typical 3mm table-saw
-// blade — adjust if your saw is different).
+// 2D nesting layout for cutting all 11 frame pieces from a single 12mm plywood
+// sheet. Pieces are arranged in two columns from the top edge of the sheet,
+// with a `kerf` gap between adjacent pieces (typical 3mm table-saw blade — a
+// single pass down the centre of the gap separates two pieces at exact size).
 //
-// Sheet: 1220 × 2440mm (standard 4'×8'). Origin at the sheet's bottom-left,
-// pieces filled from the top down so the waste is at the bottom.
-//   Column A (x: 0 .. innerWidth):       Back plate, Bottom plate, Shelf 1,
-//                                        Shelf 2, both Kick plates, Front lip
-//   Column B (x: innerWidth+kerf .. ):   Side panel × 2, Cross-brace
+// Sheet: 1220 × 2440mm (standard 4'×8'). Cadova origin at the bottom-left,
+// pieces filled from the top down so the waste collects at the bottom.
+//   Column A: Front lip, both Kick plates, Shelf 4/3/2, Shelf 1 (bottom plate,
+//             full outer depth), Back plate.
+//   Column B: Side panel × 2 (polygon profile, with the sloped top), Cross-brace.
 //
-// Side panel uses its polygon profile (with the sloped top) rather than just
-// its bounding rectangle, so the diagram shows the actual cut shape.
-func nestingLayout(dims: CaddyDimensions) -> any Geometry2D {
+// Names match Cutlist.md. `nestingPlan` returns the geometry plus per-piece
+// label positions so the SVG post-processor can stamp a number on each piece
+// and print a matching legend.
+
+struct NestLabel {
+    let number: Int
+    let name: String    // English part name (matches Cutlist.md)
+    let nameES: String  // Spanish part name
+    let dims: String    // cut size as drawn, e.g. "688 × 272 × 12 mm"
+    let cx: Double  // piece centre, Cadova coords (origin bottom-left, y up)
+    let cy: Double
+    let minDim: Double  // smaller of width/height — bounds the label font size
+}
+
+struct NestingPlan {
+    let geometry: any Geometry2D
+    let labels: [NestLabel]
+    let sheetWidth: Double
+    let sheetHeight: Double
+    let legendX: Double      // legend top-left, Cadova coords
+    let legendTopY: Double
+}
+
+func nestingPlan(dims: CaddyDimensions) -> NestingPlan {
     let kerf = 3.0
     let sheetW = 1220.0
     let sheetH = 2440.0
@@ -43,46 +64,72 @@ func nestingLayout(dims: CaddyDimensions) -> any Geometry2D {
     let xB = xA + iw + kerf
     let yTop = sheetH - frameThickness - edgeMargin
 
-    // Column A — bottom-left y for each rectangle, stacked top-down.
+    var geometries: [any Geometry2D] = []
+    var labels: [NestLabel] = []
+    var n = 0
+
+    func dimStr(_ w: Double, _ h: Double) -> String {
+        String(format: "%g × %g × %g mm", w, h, t1)
+    }
+
+    func addRect(_ name: String, es: String, w: Double, h: Double, x: Double, bottomY: Double) {
+        n += 1
+        geometries.append(Rectangle([w, h]).translated(x: x, y: bottomY))
+        labels.append(NestLabel(number: n, name: name, nameES: es, dims: dimStr(w, h),
+                                cx: x + w / 2, cy: bottomY + h / 2, minDim: min(w, h)))
+    }
+
+    // Column A — full-width pieces stacked top-down.
     var topA = yTop
-    let yLip    = topA - sk;        topA = yLip - kerf
-    let yKickB  = topA - sk;        topA = yKickB - kerf
-    let yKickF  = topA - sk;        topA = yKickF - kerf
-    let yShelf2 = topA - id;        topA = yShelf2 - kerf
-    let yShelf1 = topA - id;        topA = yShelf1 - kerf
-    let yBottom = topA - od;        topA = yBottom - kerf
-    let yBack   = topA - (bh - t1)
+    @discardableResult
+    func placeColA(_ name: String, es: String, h: Double) -> Double {
+        let bottom = topA - h
+        addRect(name, es: es, w: iw, h: h, x: xA, bottomY: bottom)
+        topA = bottom - kerf
+        return bottom
+    }
+    placeColA("Front lip", es: "Listón frontal", h: sk)
+    placeColA("Kick plate (back)", es: "Zócalo (trasero)", h: sk)
+    placeColA("Kick plate (front)", es: "Zócalo (frontal)", h: sk)
+    placeColA("Shelf 4", es: "Entrepaño 4", h: id)
+    placeColA("Shelf 3", es: "Entrepaño 3", h: id)
+    placeColA("Shelf 2", es: "Entrepaño 2", h: id)
+    placeColA("Shelf 1", es: "Entrepaño 1", h: od)  // bottom plate — full outer depth, tucks under back plate
+    let backBottom = placeColA("Back plate", es: "Panel trasero", h: bh - t1)
 
-    // Column B — side panels (polygon) + cross-brace (rect), stacked top-down.
-    // The polygon's natural y range is -sk..bh, so a translate of `bbox_top - bh`
-    // puts the polygon's bbox top at `bbox_top`.
+    // Column B — side panels (polygon) then cross-brace, stacked top-down.
+    // The profile's natural y range is -sk..bh; translating by `top - bh` puts
+    // its bbox top at `top`. bbox is od wide × (bh + sk) tall.
     var topB = yTop
-    let sp1Translate = topB - bh
-    let sp1Bottom    = topB - (bh + sk);  topB = sp1Bottom - kerf
-    let sp2Translate = topB - bh
-    let sp2Bottom    = topB - (bh + sk);  topB = sp2Bottom - kerf
-    let yBrace       = topB - sk
+    func placeSide(_ name: String, es: String) {
+        n += 1
+        let translate = topB - bh
+        geometries.append(sidePanel.profile.translated(x: xB, y: translate))
+        labels.append(NestLabel(number: n, name: name, nameES: es, dims: dimStr(od, bh + sk),
+                                cx: xB + od / 2, cy: translate + (bh - sk) / 2, minDim: od))
+        topB = (translate - sk) - kerf
+    }
+    placeSide("Side panel", es: "Panel lateral")
+    placeSide("Side panel", es: "Panel lateral")
+    addRect("Cross-brace", es: "Travesaño", w: od, h: sk, x: xB, bottomY: topB - sk)
 
-    return Union {
-        // Sheet outline as a frame
+    let pieces = geometries
+    let geometry = Union {
+        // Sheet outline as a frame.
         Rectangle([sheetW, sheetH])
             .subtracting {
                 Rectangle([sheetW - 2 * frameThickness, sheetH - 2 * frameThickness])
                     .translated(x: frameThickness, y: frameThickness)
             }
-
-        // Column A
-        Rectangle([iw, bh - t1]).translated(x: xA, y: yBack)
-        Rectangle([iw, od]).translated(x: xA, y: yBottom)
-        Rectangle([iw, id]).translated(x: xA, y: yShelf1)
-        Rectangle([iw, id]).translated(x: xA, y: yShelf2)
-        Rectangle([iw, sk]).translated(x: xA, y: yKickF)
-        Rectangle([iw, sk]).translated(x: xA, y: yKickB)
-        Rectangle([iw, sk]).translated(x: xA, y: yLip)
-
-        // Column B
-        sidePanel.profile.translated(x: xB, y: sp1Translate)
-        sidePanel.profile.translated(x: xB, y: sp2Translate)
-        Rectangle([od, sk]).translated(x: xB, y: yBrace)
+        for g in pieces { g }
     }
+
+    return NestingPlan(
+        geometry: geometry,
+        labels: labels,
+        sheetWidth: sheetW,
+        sheetHeight: sheetH,
+        legendX: xA,
+        legendTopY: backBottom - kerf - 30  // waste area below column A's last piece
+    )
 }

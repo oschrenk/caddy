@@ -1,6 +1,7 @@
 import Cadova
 
 let cutReg = CutRegistry()
+let nesting = nestingPlan(dims: CaddyDimensions())
 
 await Project {
 
@@ -49,6 +50,9 @@ await Model("caddy") {
     let macbookNeoPart = Part("MacBook Neo")
     let ipadPart = Part("iPad")
     let laptopStandPart = Part("Laptop stand")
+    let magicKeyboardPart = Part("Magic Keyboard")
+    let magicTrackpadPart = Part("Magic Trackpad")
+    let profilePart = Part("Aluminium profile")
 
     // Colors
     let ral1003 = Color(hex: "F7BA0B") // signal yellow
@@ -676,6 +680,33 @@ await Model("caddy") {
         .inPart(monitorPart)
 
     // *************************
+    // * KEYBOARD + TRACKPAD on the standing desk
+    // *************************
+    // Both sit near the user-side (low-x) edge of the desk top. Each is
+    // self-centered, then rotated ~90° around z so its long axis runs along y,
+    // then placed. A few degrees off true square gives a "real desk" look.
+    let magicKb = MagicKeyboard()
+    let magicTp = MagicTrackpad()
+    let kbTpGap = 50.0
+    let kbFromFrontEdge = 200.0
+    let kbCenterX = deskTx + kbFromFrontEdge
+    let kbCenterY = deskTy + standingDesk.topWidth / 2 + 100
+    let tpCenterX = kbCenterX
+    let tpCenterY = kbCenterY - magicKb.width / 2 - kbTpGap - magicTp.width / 2
+
+    magicKb
+        .translated(x: -magicKb.width / 2, y: -magicKb.depth / 2, z: 0)
+        .rotated(z: 96°)
+        .translated(x: kbCenterX, y: kbCenterY, z: deskTopZ)
+        .inPart(magicKeyboardPart)
+
+    magicTp
+        .translated(x: -magicTp.width / 2, y: -magicTp.depth / 2, z: 0)
+        .rotated(z: 84°)
+        .translated(x: tpCenterX, y: tpCenterY, z: deskTopZ)
+        .inPart(magicTrackpadPart)
+
+    // *************************
     // * LAPTOP STAND on shelf 4 (left). Holds MBP 16, MBN, iPad hinge-down.
     // *************************
     let stand = LaptopStand()
@@ -761,18 +792,33 @@ await Model("caddy") {
             z: shelf4Z
         )
         .inPart(gearPart)
+
+    // *************************
+    // * ALUMINIUM PROFILE (visual reference)
+    // *************************
+    // item Profile 5 20x20, standing on the floor to the left of the caddy.
+    TSlotExtrusion()
+        .translated(x: -60, y: outerDepth / 2, z: -casterDiameter)
+        .inPart(profilePart)
+}
+
+// Bare plywood cabinet (no gear/hardware), merged into one mesh as caddy.stl.
+await Model("caddy", options: .format3D(.stl)) {
+    Cabinet(dims: CaddyDimensions())
 }
 
 // 2D nesting layout for the plywood sheet, written as SVG alongside caddy.3mf.
 await Model("Nesting", options: .format2D(.svg)) {
-    nestingLayout(dims: CaddyDimensions())
+    nesting.geometry
 }
 
 } // end Project
 
 // Cadova emits Nesting.svg as one merged <path>; split it so each piece
-// becomes an independently selectable SVG element.
+// becomes an independently selectable SVG element, then stamp piece numbers
+// and a legend on top.
 try splitSVGPaths(at: "Nesting.svg")
+try annotateNestingSVG(at: "Nesting.svg", plan: nesting)
 
 // Frame cutlist, derived from the bounding boxes measured during the build.
 try writeCutlist(cutReg.all)
