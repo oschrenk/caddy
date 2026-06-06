@@ -666,6 +666,28 @@ await Model("caddy") {
         )
         .inPart(gearPart)
 
+    // Vallejo Model Color 70.939 Smoke bottle, centered in the tray interior.
+    VallejoBottle()
+        .translated(
+            x: trayX + tray.width / 2,
+            y: trayY + tray.depth / 2,
+            z: shelf2Z + tray.wall
+        )
+        .inPart(gearPart)
+
+    // Wash bottle in the right-front corner of the tray, spout pointing forward.
+    let washBottle = WashBottle()
+    let washBottleMargin = 10.0
+    washBottle
+        .rotated(z: 180°)
+        .aligned(at: .min)
+        .translated(
+            x: trayX + tray.width - tray.wall - washBottle.width - washBottleMargin,
+            y: trayY + tray.wall + washBottleMargin,
+            z: shelf2Z + tray.wall
+        )
+        .inPart(gearPart)
+
     // *************************
     // * STANDING DESK (visual reference, not part of the cutlist)
     // *************************
