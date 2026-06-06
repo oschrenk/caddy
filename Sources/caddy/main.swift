@@ -55,11 +55,15 @@ await Model("caddy") {
     let profilePart = Part("Aluminium profile")
 
     // Colors
-    let ral1003 = Color(hex: "F7BA0B") // signal yellow
     let ral3015 = Color(hex: "E5A4B2") // light pink
     let ral240_80_15 = Color(hex: "AACDDD") // RAL Design 240 80 15, light pastel blue
-    let ral6019 = Color(hex: "B9CEAC") // RAL 6019, pastel green (mint)
-    let apricot = Color(hex: "F4A261") // warm apricot orange
+
+    // Molotow Belton Premium 400ml — swatches sampled from shop.molotow.com.
+    let moloSignalYellow = Color(hex: "FFCC00") // #004 signal yellow
+    let moloKiwi         = Color(hex: "96B922") // #150 kiwi
+    let moloShockBlue    = Color(hex: "59A8CD") // #093 shock blue middle
+    let moloTrafficRed   = Color(hex: "D4021E") // #016 traffic red
+    let moloBlackberry   = Color(hex: "673C7C") // #068 blackberry
 
     // *************************
     // * FRAME
@@ -162,7 +166,7 @@ await Model("caddy") {
             cutReg.record(name: "Side panel", size: box.size, notes: "Polygon profile")
             return geom
         }
-        .withMaterial(color: ral1003, metallicness: 0, roughness: 0.85)
+        .withMaterial(color: moloSignalYellow, metallicness: 0, roughness: 0.85)
         .inPart(leftPanelPart)
 
     // Right side — clearance holes enter at x = t1 (outside) and extend in -x.
@@ -178,7 +182,7 @@ await Model("caddy") {
             cutReg.record(name: "Side panel", size: box.size, notes: "Polygon profile")
             return geom
         }
-        .withMaterial(color: ral1003, metallicness: 0, roughness: 0.85)
+        .withMaterial(color: moloSignalYellow, metallicness: 0, roughness: 0.85)
         .translated(x: outerWidth - t1)
         .inPart(rightPanelPart)
 
@@ -222,7 +226,7 @@ await Model("caddy") {
             cutReg.record(name: "Kick plate", size: box.size, notes: "Front and back; hides casters")
             return geom
         }
-        .withMaterial(color: ral1003, metallicness: 0, roughness: 0.85)
+        .withMaterial(color: moloSignalYellow, metallicness: 0, roughness: 0.85)
         .translated(x: t1, z: -skirtHeight)
         .inPart(skirtPart)
 
@@ -232,7 +236,7 @@ await Model("caddy") {
             cutReg.record(name: "Kick plate", size: box.size, notes: "Front and back; hides casters")
             return geom
         }
-        .withMaterial(color: ral1003, metallicness: 0, roughness: 0.85)
+        .withMaterial(color: moloSignalYellow, metallicness: 0, roughness: 0.85)
         .translated(x: t1, y: outerDepth - t1, z: -skirtHeight)
         .inPart(skirtPart)
 
@@ -242,7 +246,7 @@ await Model("caddy") {
             cutReg.record(name: "Cross-brace", size: box.size, notes: "Under bottom plate, centered in x")
             return geom
         }
-        .withMaterial(color: ral1003, metallicness: 0, roughness: 0.85)
+        .withMaterial(color: moloSignalYellow, metallicness: 0, roughness: 0.85)
         .translated(x: t1 + (innerWidth - t1) / 2, z: -skirtHeight)
         .inPart(skirtPart)
 
@@ -295,7 +299,7 @@ await Model("caddy") {
             cutReg.record(name: "Front lip", size: box.size, notes: "Same cut as kick plates.")
             return geom
         }
-        .withMaterial(color: ral1003, metallicness: 0, roughness: 0.85)
+        .withMaterial(color: moloSignalYellow, metallicness: 0, roughness: 0.85)
         .translated(x: t1, z: shelf4Z)
         .inPart(skirtPart)
 
@@ -651,6 +655,17 @@ await Model("caddy") {
         )
         .inPart(gearPart)
 
+    // Small wooden box parked in the back-right corner of the tray interior.
+    let smallBox = WoodenBoxSmall()
+    smallBox
+        .colored(Color(hex: "C9A982")) // bamboo, matching the tray
+        .translated(
+            x: trayX + tray.width - tray.wall - smallBox.width,
+            y: trayY + tray.depth - tray.wall - smallBox.depth,
+            z: shelf2Z + tray.wall
+        )
+        .inPart(gearPart)
+
     // *************************
     // * STANDING DESK (visual reference, not part of the cutlist)
     // *************************
@@ -768,11 +783,11 @@ await Model("caddy") {
 
     // Wooden boxes on shelf 3 — a row spaced evenly across innerWidth,
     // rotated 90° around z. Centered in y. Each box gets a different
-    // painted color (yellow, pink, blue, mint, apricot), left to right.
+    // painted color (yellow, kiwi, shock blue, traffic red, blackberry), left to right.
     let box1 = WoodenBox() // box from cemaco
     let box1Y = (t1 + innerDepth - box1.width) / 2
     let boxGap = (innerWidth - Double(boxCount) * box1.depth) / Double(boxCount + 1)
-    let boxColors = [ral1003, ral3015, ral240_80_15, ral6019, apricot]
+    let boxColors = [moloSignalYellow, moloKiwi, moloShockBlue, moloTrafficRed, moloBlackberry]
     for i in 0 ..< boxCount {
         let x = t1 + boxGap + Double(i) * (box1.depth + boxGap)
         box1
