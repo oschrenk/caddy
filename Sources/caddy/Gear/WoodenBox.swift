@@ -5,7 +5,7 @@ import Cadova
 struct WoodenBox: Shape3D {
     let width = 254.0   // 10 in
     let depth = 127.0   // 5 in
-    let height = 109.22 // 4.3 in
+    let height = 105.0 // rounded up from 104.3
     let wall = 8.0
 
     // Handle cutout

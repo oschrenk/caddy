@@ -20,9 +20,9 @@ struct CaddyDimensions {
         wiggleRoom: Double = 3.0,
         backHeight: Double = 712.0,
         outerWidth: Double = 712.0,
-        shelf2Z: Double = 300.0,
+        shelf2Z: Double = 287.0,
         shelf4Z: Double = 600.0,
-        shelf3TopGap: Double = 112.0, // clearance for wooden box (109.22 mm) + slack
+        shelf3TopGap: Double = 110.0, // clearance for wooden box (105 mm) + 5 mm slack
         skirtHeight: Double = 25.0,
         casterDiameter: Double = 45.7,
         frontInset: Double = 25.0

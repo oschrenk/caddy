@@ -136,9 +136,9 @@ This is the foundation. Square *now*; you cannot fix it later.
 ### Shelves
 
 19. **Shelf 1** first. Slide it in horizontally between the side panels
-    at z = 300mm (top surface). Glue the two side edges. Drive 3
+    at z = 287mm (top surface). Glue the two side edges. Drive 3
     Confirmat screws per side from outside.
-20. **Shelf 2** next, at z = 600mm. Glue the two side edges. Drive 2
+20. **Shelf 2** next, at z = 600mm. Glue the two side edges. Drive 3
     Confirmat screws per side.
 
 ### Front lip
@@ -177,9 +177,9 @@ board; centered across the board's thickness.
 
 | Joint | Screws | Notes |
 |---|---|---|
-| Side panel ↔ bottom plate | 4 per side (8 total) | Heaviest load path. |
+| Side panel ↔ bottom plate | 3 per side (6 total) | Heaviest load path. |
 | Side panel ↔ shelf 1 | 3 per side (6 total) | Tray + middle shelf load. |
-| Side panel ↔ shelf 2 | 2 per side (4 total) | Lighter load. |
+| Side panel ↔ shelf 2 | 3 per side (6 total) | Symmetric with other shelves. |
 | Side panel ↔ front kick plate | 1 per side (2 total) | Centered in the 25mm-tall kick plate end. |
 | Side panel ↔ back kick plate | 1 per side (2 total) | Centered in the 25mm-tall kick plate end. |
 | Side panel ↔ back plate | 4 per side (8 total) | Distribute top to bottom. |

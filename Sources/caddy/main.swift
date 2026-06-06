@@ -58,6 +58,8 @@ await Model("caddy") {
     let ral1003 = Color(hex: "F7BA0B") // signal yellow
     let ral3015 = Color(hex: "E5A4B2") // light pink
     let ral240_80_15 = Color(hex: "AACDDD") // RAL Design 240 80 15, light pastel blue
+    let ral6019 = Color(hex: "B9CEAC") // RAL 6019, pastel green (mint)
+    let apricot = Color(hex: "F4A261") // warm apricot orange
 
     // *************************
     // * FRAME
@@ -77,10 +79,10 @@ await Model("caddy") {
     // Confirmat clearance holes on the side panels — one set of (y, z) positions
     // per panel, mirrored in x for left vs right. Layout per Assembly.md:
     //
-    //   • Shelf 1 (bottom plate): 4 per side panel
+    //   • Shelf 1 (bottom plate): 3 per side panel
     //   • Shelf 2:         3 per side panel
-    //   • Shelf 3:         2 per side panel
-    //   • Shelf 4:         2 per side panel
+    //   • Shelf 3:         3 per side panel
+    //   • Shelf 4:         3 per side panel
     //   • Front kick:      1 per side panel
     //   • Back kick:       1 per side panel
     //   • Back plate:      4 per side panel (top one close to the peak)
@@ -91,16 +93,16 @@ await Model("caddy") {
     let edgeMargin = 25.0
 
     let shelf1ZMid = t1 / 2
-    let shelf1Ys = (0 ..< 4).map { edgeMargin + Double($0) * (outerDepth - 2 * edgeMargin) / 3 }
+    let shelf1Ys = (0 ..< 3).map { edgeMargin + Double($0) * (outerDepth - 2 * edgeMargin) / 2 }
 
     let shelf2ZMid = shelf2Z - t1 / 2
     let shelf2Ys = (0 ..< 3).map { edgeMargin + Double($0) * (innerDepth - 2 * edgeMargin) / 2 }
 
     let shelf4ZMid = shelf4Z - t1 / 2
-    let shelf4Ys = [t1 + edgeMargin, innerDepth - edgeMargin]
+    let shelf4Ys = (0 ..< 3).map { edgeMargin + Double($0) * (innerDepth - 2 * edgeMargin) / 2 }
 
     let shelf3ZMid = shelf3Z - t1 / 2
-    let shelf3Ys = [t1 + edgeMargin, innerDepth - edgeMargin]
+    let shelf3Ys = (0 ..< 3).map { edgeMargin + Double($0) * (innerDepth - 2 * edgeMargin) / 2 }
 
     let kickZ = -skirtHeight / 2
     let frontKickY = t1 / 2
@@ -757,14 +759,16 @@ await Model("caddy") {
         .inPart(ipadPart)
 
     // Wooden boxes on shelf 3 — a row spaced evenly across innerWidth,
-    // rotated 90° around z. Centered in y.
+    // rotated 90° around z. Centered in y. Each box gets a different
+    // painted color (yellow, pink, blue, mint, apricot), left to right.
     let box1 = WoodenBox() // box from cemaco
     let box1Y = (t1 + innerDepth - box1.width) / 2
     let boxGap = (innerWidth - Double(boxCount) * box1.depth) / Double(boxCount + 1)
+    let boxColors = [ral1003, ral3015, ral240_80_15, ral6019, apricot]
     for i in 0 ..< boxCount {
         let x = t1 + boxGap + Double(i) * (box1.depth + boxGap)
         box1
-            .colored(Color(hex: "E8D5B0")) // light wood (birch/maple)
+            .withMaterial(color: boxColors[i], metallicness: 0, roughness: 0.85)
             .rotated(z: 90°)
             .aligned(at: .min)
             .translated(x: x, y: box1Y, z: shelf3Z)
