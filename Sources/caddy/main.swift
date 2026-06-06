@@ -85,35 +85,43 @@ await Model("caddy") {
     //   • Shelf 4:         3 per side panel
     //   • Front kick:      1 per side panel
     //   • Back kick:       1 per side panel
-    //   • Back plate:      4 per side panel (top one close to the peak)
+    //   • Back plate:      5 per side panel (top one close to the peak)
     //   • Front lip:       1 per side (into the lip's ends) + 2 hidden screws
     //                       driven up from under shelf 4 into the lip's bottom
     //
     let screw = ConfirmatScrew()
-    let edgeMargin = 25.0
+    let edgeMargin = 35.0
+
+    // Shared y-positions for all shelf screws — symmetric from the cabinet's
+    // front and rear faces (front screw 30 mm from y=0, back screw 30 mm from
+    // y=outerDepth, middle centered). Shelves 2/3/4 only reach y=innerDepth,
+    // but the back screw at outerDepth-30 still falls within their edge.
+    let shelfYs = (0 ..< 3).map { edgeMargin + Double($0) * (outerDepth - 2 * edgeMargin) / 2 }
 
     let shelf1ZMid = t1 / 2
-    let shelf1Ys = (0 ..< 3).map { edgeMargin + Double($0) * (outerDepth - 2 * edgeMargin) / 2 }
+    let shelf1Ys = shelfYs
 
     let shelf2ZMid = shelf2Z - t1 / 2
-    let shelf2Ys = (0 ..< 3).map { edgeMargin + Double($0) * (innerDepth - 2 * edgeMargin) / 2 }
+    let shelf2Ys = shelfYs
 
     let shelf4ZMid = shelf4Z - t1 / 2
-    let shelf4Ys = (0 ..< 3).map { edgeMargin + Double($0) * (innerDepth - 2 * edgeMargin) / 2 }
+    let shelf4Ys = shelfYs
 
     let shelf3ZMid = shelf3Z - t1 / 2
-    let shelf3Ys = (0 ..< 3).map { edgeMargin + Double($0) * (innerDepth - 2 * edgeMargin) / 2 }
+    let shelf3Ys = shelfYs
 
     let kickZ = -skirtHeight / 2
     let frontKickY = t1 / 2
     let backKickY = outerDepth - t1 / 2
 
     let backPlateY = outerDepth - t1 / 2
-    let backPlateZTop = backHeight - 30
-    let backPlateZBottom = t1 + 30
-    let backPlateZs = (0 ..< 4).map {
-        backPlateZBottom + Double($0) * (backPlateZTop - backPlateZBottom) / 3
-    }
+    let backPlateZs: [Double] = [
+        shelf1ZMid + 60, // 60 mm above shelf 1 screw centerline
+        shelf2ZMid - 60, // 60 mm below shelf 2 screw centerline
+        (shelf2ZMid + shelf3ZMid) / 2, // midway between shelf 2 and shelf 3 screws
+        (shelf3ZMid + shelf4ZMid) / 2, // midway between shelf 3 and shelf 4 screws
+        backHeight - 12.5, // top — matches lip screw inset (12.5 mm from edge)
+    ]
 
     let lipY = t1 / 2
     let lipZ = shelf4Z + lipHeight / 2
