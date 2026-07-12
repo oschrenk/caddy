@@ -2,9 +2,7 @@ import Cadova
 
 // Vallejo Model Color 17 ml dropper bottle with cap.
 //
-// Profiles measured from two 3MF meshes (rotationally symmetric around z).
-//
-// Bottle (no cap), bottom to top:
+// Bottle profile measured from a 3MF mesh (rotationally symmetric, primitives):
 //   z=  0– 3     bottom fillet R=3
 //   z=  3–40     body cylinder ⌀25
 //   z= 40–46     shoulder fillet R=6 (⌀25 → ⌀13.4)
@@ -14,11 +12,11 @@ import Cadova
 //   z= 60–67     dropper stem taper ⌀10.5 → ⌀4
 //   z= 67–72     dropper tip ⌀4
 //
-// Cap, bottom to top — slightly tapered cylinder with a chamfered shoulder
-// and a coned-in top (not a rounded dome):
-//   z= 51–65     main shell, tapered ⌀18.9 → ⌀16.7
-//   z= 65–68     chamfered shoulder, ⌀16.7 → ⌀10 (sharp cone)
-//   z= 68–76     tapered finial, ⌀10 → ⌀7
+// Cap profile is sampled from the mesh and revolved as a polygon:
+// slightly tapered shell up to z=64, then a single convex curve sweeping
+// from ⌀16.7 down to a flat ⌀7 top at z=76. (The mesh has small radial
+// bumps above z=68 — looked like a pagoda when modeled literally —
+// smoothed here into one continuous curve as the cap actually appears.)
 //
 // Body color defaults to Vallejo Model Color 70.939 Smoke. The hex (#937E62)
 // is an approximation sampled from Encycolorpedia's RGB swatch — Vallejo does
@@ -33,7 +31,7 @@ struct VallejoBottle: Shape3D {
     let bodyBottomFillet = 3.0
     let shoulderFilletRadius = 6.0
     let bodyStraightTopZ = 40.0
-    let shoulderTopZ = 46.0           // bodyStraightTopZ + shoulderFilletRadius
+    let shoulderTopZ = 46.0
 
     let neckBaseDiameter = 13.4
     let neckBaseTopZ = 48.0
@@ -48,15 +46,10 @@ struct VallejoBottle: Shape3D {
     let dropperTaperTopZ = 67.0
     let dropperTipTopZ = 72.0
 
-    // Cap dimensions
-    let capBottomZ = 51.0
-    let capBottomDiameter = 18.9
-    let capShellTopZ = 65.0
-    let capShellTopDiameter = 16.7
-    let capChamferTopZ = 68.0
-    let capChamferTopDiameter = 10.0
-    let capFinialDiameter = 7.0
-    let capTopZ = 76.0
+    // Label — white shallow cylinder around the body cylinder
+    let labelDiameter = 25.4   // 0.2 mm radial padding over the body
+    let labelBottomZ = 10.0
+    let labelTopZ = 35.0
 
     init(
         bottleColor: Color = Color(hex: "937E62"), // Vallejo Model Color 70.939 Smoke
@@ -66,11 +59,36 @@ struct VallejoBottle: Shape3D {
         self.capColor = capColor
     }
 
+    // Cap profile: (radius, z) points. Tapered shell up to z=64, then
+    // one continuous convex curve down to a flat ⌀7 top at z=76.
+    private var capProfile: [Vector2D] {
+        [
+            Vector2D(x: 0,    y: 51.0),
+            Vector2D(x: 9.32, y: 51.0),
+            Vector2D(x: 9.45, y: 51.5),
+            Vector2D(x: 9.10, y: 55.5),
+            Vector2D(x: 8.69, y: 60.0),
+            Vector2D(x: 8.36, y: 64.0),
+            Vector2D(x: 8.29, y: 64.5),
+            Vector2D(x: 7.91, y: 65.0),
+            Vector2D(x: 6.49, y: 65.5),
+            Vector2D(x: 5.77, y: 66.0),
+            Vector2D(x: 5.32, y: 66.5),
+            Vector2D(x: 4.97, y: 67.0),
+            Vector2D(x: 4.74, y: 67.75),
+            Vector2D(x: 4.65, y: 68.0),
+            Vector2D(x: 4.40, y: 70.0),
+            Vector2D(x: 4.20, y: 72.0),
+            Vector2D(x: 4.00, y: 74.0),
+            Vector2D(x: 3.50, y: 76.0),
+            Vector2D(x: 0,    y: 76.0),
+        ]
+    }
+
     var body: any Geometry3D {
         Union {
             // ─── Bottle ─────────────────────────────────────────────────
             Union {
-                // Body cylinder with bottom and top fillets.
                 Circle(diameter: bodyDiameter)
                     .extruded(
                         height: shoulderTopZ,
@@ -78,19 +96,15 @@ struct VallejoBottle: Shape3D {
                         bottomEdge: .fillet(radius: bodyBottomFillet)
                     )
 
-                // Neck base below the thread ring.
                 Cylinder(diameter: neckBaseDiameter, height: neckBaseTopZ - shoulderTopZ)
                     .translated(z: shoulderTopZ)
 
-                // Thread ring.
                 Cylinder(diameter: threadRingDiameter, height: threadRingTopZ - neckBaseTopZ)
                     .translated(z: neckBaseTopZ)
 
-                // Cap-fit cylinder.
                 Cylinder(diameter: capFitDiameter, height: capFitTopZ - threadRingTopZ)
                     .translated(z: threadRingTopZ)
 
-                // Dropper stem taper.
                 Cylinder(
                     bottomDiameter: capFitDiameter,
                     topDiameter: dropperTipDiameter,
@@ -98,39 +112,20 @@ struct VallejoBottle: Shape3D {
                 )
                 .translated(z: capFitTopZ)
 
-                // Dropper tip stub.
                 Cylinder(diameter: dropperTipDiameter, height: dropperTipTopZ - dropperTaperTopZ)
                     .translated(z: dropperTaperTopZ)
             }
             .colored(bottleColor)
 
-            // ─── Cap ────────────────────────────────────────────────────
-            Union {
-                // Main shell — slightly tapered.
-                Cylinder(
-                    bottomDiameter: capBottomDiameter,
-                    topDiameter: capShellTopDiameter,
-                    height: capShellTopZ - capBottomZ
-                )
-                .translated(z: capBottomZ)
+            // ─── Cap (revolved polygon, profile from mesh) ──────────────
+            Polygon(capProfile)
+                .revolved()
+                .colored(capColor)
 
-                // Chamfered shoulder — sharp cone, not a rounded dome.
-                Cylinder(
-                    bottomDiameter: capShellTopDiameter,
-                    topDiameter: capChamferTopDiameter,
-                    height: capChamferTopZ - capShellTopZ
-                )
-                .translated(z: capShellTopZ)
-
-                // Tapered finial on top.
-                Cylinder(
-                    bottomDiameter: capChamferTopDiameter,
-                    topDiameter: capFinialDiameter,
-                    height: capTopZ - capChamferTopZ
-                )
-                .translated(z: capChamferTopZ)
-            }
-            .colored(capColor)
+            // ─── Label (white wrap around the body cylinder) ────────────
+            Cylinder(diameter: labelDiameter, height: labelTopZ - labelBottomZ)
+                .translated(z: labelBottomZ)
+                .colored(Color(hex: "FFFFFF"))
         }
     }
 }

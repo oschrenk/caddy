@@ -668,14 +668,27 @@ await Model("caddy") {
         )
         .inPart(gearPart)
 
-    // Vallejo Model Color 70.939 Smoke bottle, centered in the tray interior.
-    VallejoBottle()
-        .translated(
-            x: trayX + tray.width / 2,
-            y: trayY + tray.depth / 2,
-            z: shelf2Z + tray.wall
-        )
-        .inPart(gearPart)
+    // Vallejo Model Color bottles in a 2×2 grid, centered in the tray.
+    // Hex values are best-effort matches sampled from Encycolorpedia's RGB
+    // swatches (Vallejo doesn't publish official hex).
+    let vallejoColors: [(name: String, hex: String, dx: Double, dy: Double)] = [
+        ("70.939 Smoke",        "937E62", -1, -1), // front-left
+        ("70.915 Deep Yellow",  "F8DB5D",  1, -1), // front-right
+        ("70.875 Beige Brown",  "564744", -1,  1), // back-left
+        ("70.981 Orange Brown", "99624B",  1,  1), // back-right
+    ]
+    let bottleSpacing = 30.0 // center-to-center
+    let bottleGridCenterX = trayX + tray.width / 2
+    let bottleGridCenterY = trayY + tray.depth / 2
+    for v in vallejoColors {
+        VallejoBottle(bottleColor: Color(hex: v.hex))
+            .translated(
+                x: bottleGridCenterX + v.dx * bottleSpacing / 2,
+                y: bottleGridCenterY + v.dy * bottleSpacing / 2,
+                z: shelf2Z + tray.wall
+            )
+            .inPart(gearPart)
+    }
 
     // Wash bottle in the right-front corner of the tray, spout pointing forward.
     let washBottle = WashBottle()
