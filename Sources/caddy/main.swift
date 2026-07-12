@@ -66,6 +66,8 @@ await Model("caddy") {
     let moloShockBlue    = Color(hex: "59A8CD") // #093 shock blue middle
     let moloTrafficRed   = Color(hex: "D4021E") // #016 traffic red
     let moloBlackberry   = Color(hex: "673C7C") // #068 blackberry
+    let moloDareOrangeLight = Color(hex: "EB6816") // #013 DARE orange light
+    let moloPastelOrange    = Color(hex: "ED7920") // #012 pastel orange
 
     // *************************
     // * FRAME
@@ -638,10 +640,9 @@ await Model("caddy") {
             .inPart(gearPart)
     }
 
-    // tray on shelf 2, centered in both x and y.
+    // tray on shelf 2, pushed flush against the inner right side panel.
     let tray = Tray()
-    let trayShiftRight = 80.0
-    let trayX = t1 + (innerWidth - tray.width) / 2 + trayShiftRight
+    let trayX = t1 + innerWidth - tray.width
     let trayY = (innerDepth - tray.depth) / 2
     tray.colored(Color(hex: "C9A982")) // bamboo
         .translated(x: trayX, y: trayY, z: shelf2Z).inPart(gearPart)
@@ -861,13 +862,21 @@ await Model("caddy") {
             .inPart(gearPart)
     }
 
-    // One additional wooden box on shelf 2, left of the tray.
-    box1
-        .colored(Color(hex: "E8D5B0"))
-        .rotated(z: 90°)
-        .aligned(at: .min)
-        .translated(x: t1 + wiggleRoom, y: box1Y, z: shelf2Z)
-        .inPart(gearPart)
+    // Two wooden boxes on shelf 2, side-by-side, left of the tray. The first
+    // is bamboo, the second is painted Molotow #013 DARE orange light.
+    let shelf2BoxColors = [Color(hex: "E8D5B0"), moloPastelOrange]
+    for i in 0 ..< 2 {
+        box1
+            .colored(shelf2BoxColors[i])
+            .rotated(z: 90°)
+            .aligned(at: .min)
+            .translated(
+                x: t1 + wiggleRoom + Double(i) * (box1.depth + wiggleRoom),
+                y: box1Y,
+                z: shelf2Z
+            )
+            .inPart(gearPart)
+    }
 
     // Headphones on shelf 4, parked on the left side. Z 90° orients them,
     // Y 115° tilts them toward the laptop stand.
