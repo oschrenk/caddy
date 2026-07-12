@@ -11,7 +11,7 @@ tasks:
       - swift build
 
   run:
-    desc: Build and run, producing caddy.3mf
+    desc: Build and run, producing Build/caddy.3mf
     cmds:
       - swift run caddy
 
@@ -20,7 +20,8 @@ tasks:
     cmds:
       - swift package clean
       - rm -rf .build
-      - rm -f caddy.3mf
+      - rm -rf Build
+      - rm -f Docs/Cutlist.md
 
   resolve:
     desc: Resolve Swift package dependencies

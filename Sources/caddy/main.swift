@@ -3,7 +3,7 @@ import Cadova
 let cutReg = CutRegistry()
 let nesting = nestingPlan(dims: CaddyDimensions())
 
-await Project {
+await Project(root: "Build") {
 
 await Model("caddy") {
     // *************************
@@ -922,7 +922,7 @@ await Model("caddy", options: .format3D(.stl)) {
     Cabinet(dims: CaddyDimensions())
 }
 
-// 2D nesting layout for the plywood sheet, written as SVG alongside caddy.3mf.
+// 2D nesting layout for the plywood sheet, written as SVG into Build/.
 await Model("Nesting", options: .format2D(.svg)) {
     nesting.geometry
 }
@@ -932,8 +932,8 @@ await Model("Nesting", options: .format2D(.svg)) {
 // Cadova emits Nesting.svg as one merged <path>; split it so each piece
 // becomes an independently selectable SVG element, then stamp piece numbers
 // and a legend on top.
-try splitSVGPaths(at: "Nesting.svg")
-try annotateNestingSVG(at: "Nesting.svg", plan: nesting)
+try splitSVGPaths(at: "Build/Nesting.svg")
+try annotateNestingSVG(at: "Build/Nesting.svg", plan: nesting)
 
 // Frame cutlist, derived from the bounding boxes measured during the build.
-try writeCutlist(cutReg.all)
+try writeCutlist(cutReg.all, to: "Docs/Cutlist.md")

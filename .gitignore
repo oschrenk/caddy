@@ -1,9 +1,7 @@
 .build/
 .swiftpm/
-*.3mf
-*.svg
-/caddy.stl
-Cutlist.md
+/Build/
+/Docs/Cutlist.md
 /.cottage/identity
 /Assets/Headphones.stl
 /Assets/Tower.stl
