@@ -47,6 +47,8 @@ await Model("caddy") {
     let standingDeskPart = Part("Standing desk")
     let monitorPart = Part("Monitor")
     let macbookPart = Part("MacBook Pro 16\"")
+    let macbookAirPart = Part("MacBook Air 15\"")
+    let macbookAir13Part = Part("MacBook Air 13\"")
     let macbookNeoPart = Part("MacBook Neo")
     let ipadPart = Part("iPad")
     let laptopStandPart = Part("Laptop stand")
@@ -757,7 +759,17 @@ await Model("caddy") {
     // * LAPTOP STAND on shelf 4 (left). Holds MBP 16, MBN, iPad hinge-down.
     // *************************
     let stand = LaptopStand()
-    let standX = t1 + innerWidth - stand.width - wiggleRoom
+    let macbook = MacBookPro16()
+    let macbookAir = MacBookAir15()
+    let macbookAir13 = MacBookAir13()
+    let macbookNeo = MacBookNeo()
+    let ipad = Ipad()
+    let boxCount = 5
+
+    // The stand is narrower than the largest laptop — laptops overhang. Pin the
+    // MBP 16's right edge `wiggleRoom` from the right side panel and center the
+    // stand under it.
+    let standX = t1 + innerWidth - wiggleRoom - (stand.width + macbook.width) / 2
     let standY = (innerDepth - stand.depth) / 2
     let standZ = shelf4Z
 
@@ -768,28 +780,44 @@ await Model("caddy") {
     // Devices placed vertically: rotate +90° around x so the depth axis points
     // up and the thickness axis sits across the slot. Aligned(.min) so the
     // device sits with hinge at z = 0 of its local frame.
-    let macbook = MacBookPro16()
-    let macbookNeo = MacBookNeo()
-    let ipad = Ipad()
-    let boxCount = 5
+
+    // MacBooks laid flat on the standing desk for visual size comparison.
+    // Aligned at the back-left (low-x, high-y) corner of the desktop with a
+    // 30 mm inset, stacked largest to smallest so the size differences read
+    // as visible steps along the +x and -y edges.
+    let mbStackInset = 30.0
+    let mbStackXMin = deskTx + mbStackInset
+    let mbStackYMax = deskTy + standingDesk.topWidth - mbStackInset
 
     macbook
-        .rotated(x: 90°)
-        .aligned(at: .min)
         .translated(
-            x: standX + (stand.width - macbook.width) / 2,
-            y: standY + stand.mbpSlotY - macbook.thickness / 2,
-            z: standZ + stand.slotBottomZ
+            x: mbStackXMin,
+            y: mbStackYMax - macbook.depth,
+            z: deskTopZ
         )
         .inPart(macbookPart)
 
-    macbookNeo
-        .rotated(x: 90°)
-        .aligned(at: .min)
+    macbookAir
         .translated(
-            x: standX + (stand.width - macbookNeo.width) / 2,
-            y: standY + stand.mbnSlotY - macbookNeo.thickness / 2,
-            z: standZ + stand.slotBottomZ
+            x: mbStackXMin,
+            y: mbStackYMax - macbookAir.depth,
+            z: deskTopZ + macbook.thickness
+        )
+        .inPart(macbookAirPart)
+
+    macbookAir13
+        .translated(
+            x: mbStackXMin,
+            y: mbStackYMax - macbookAir13.depth,
+            z: deskTopZ + macbook.thickness + macbookAir.thickness
+        )
+        .inPart(macbookAir13Part)
+
+    macbookNeo
+        .translated(
+            x: mbStackXMin,
+            y: mbStackYMax - macbookNeo.depth,
+            z: deskTopZ + macbook.thickness + macbookAir.thickness + macbookAir13.thickness
         )
         .inPart(macbookNeoPart)
 
