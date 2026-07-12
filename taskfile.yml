@@ -35,6 +35,11 @@ tasks:
 
   decrypt:
     desc: Pull encrypted assets from LFS and decrypt them
+    # ctg only auto-discovers .cottage/identity or ~/.ssh, so point it at the
+    # global identity if one exists. Override with COTTAGE_IDENTITY=... if elsewhere.
+    env:
+      COTTAGE_IDENTITY:
+        sh: 'test -f "$HOME/.config/cottage/identity" && echo "$HOME/.config/cottage/identity" || echo "${COTTAGE_IDENTITY:-}"'
     cmds:
       - git lfs pull
       - ctg decrypt Assets/*.cott.age
