@@ -12,16 +12,16 @@ You need:
 
 - **Tools** — see `Tools.md`.
 - **Hardware** — see § Hardware below.
-- **Parts** — all 8 cut per `Cutlist.md`. The two side panels are not
-  pure rectangles — see § The side-panel shape for what to ask your
-  supplier to do.
+- **Parts** — all cut per `Cutlist.md` (Shelf 1 is the full-depth bottom
+  plate). The two side panels are not pure rectangles — see § The
+  side-panel shape for what to ask your supplier to do.
 - **Workspace** — a flat floor or bench big enough to lay the bottom plate
   flat (~290 × 720mm) and stand a side panel next to it.
 
 ## Hardware
 
-- **~35 Confirmat screws**, M5 × 40mm (a 50-piece kit covers it with
-  spares).
+- **40 Confirmat screws**, M5 × 40mm (20 per side panel; a 50-piece kit
+  covers it with spares).
 - **2 wood screws**, ~25mm long, for the hidden lip attachment from below.
 - **16 short wood screws** for the four caster plates (size depends on the
   caster — check the package).
@@ -93,8 +93,8 @@ gluing, and driving screws.
 
 This is the foundation. Square *now*; you cannot fix it later.
 
-4. Lay the **bottom plate** face-down on the bench (the side that will
-   face the floor is up).
+4. Lay the **bottom plate** (Shelf 1, the full-depth panel) face-down on
+   the bench (the side that will face the floor is up).
 5. Stand the **cross-brace** on edge along the centerline of the bottom
    plate's underside. Glue the contact strip, hold it upright, drive
    3–4 wood screws up through the bottom plate into the brace's edge.
@@ -136,22 +136,26 @@ This is the foundation. Square *now*; you cannot fix it later.
 
 ### Shelves
 
-19. **Shelf 1** first. Slide it in horizontally between the side panels
-    at z = 287mm (top surface). Glue the two side edges. Drive 3
-    Confirmat screws per side from outside.
-20. **Shelf 2** next, at z = 600mm. Glue the two side edges. Drive 3
+Shelf 1 is the bottom plate — already in place from the base sub-assembly.
+The three remaining shelves slide in horizontally between the side panels.
+Heights are top-surface z.
+
+19. **Shelves 2 and 3.** Slide shelf 2 in at z = 287mm and shelf 3 at
+    z = 478mm. Glue the two side edges of each. Drive 3 Confirmat screws
+    per side from outside (6 per shelf).
+20. **Shelf 4** (top), at z = 600mm. Glue the two side edges. Drive 3
     Confirmat screws per side.
 
 ### Front lip
 
-The lip closes off the front of shelf 2 and stiffens the top.
+The lip closes off the front of shelf 4 and stiffens the top.
 
 21. Glue the **back face** of the lip (the 12 × 688mm face) and press it
-    against the **front edge of shelf 2**, with its bottom flush with
-    shelf 2's bottom.
+    against the **front edge of shelf 4**, standing on shelf 4's top
+    surface (its bottom flush with shelf 4's top).
 22. Drive **1 Confirmat per side** through each side panel into the
     lip's end.
-23. From under shelf 2, drive **2 wood screws** (25mm) up into the
+23. From under shelf 4, drive **2 wood screws** (25mm) up into the
     lip's bottom face. Hidden once installed; gives a face-grain pull
     that the Confirmat alone cannot.
 
@@ -178,17 +182,20 @@ board; centered across the board's thickness.
 
 | Joint | Screws | Notes |
 |---|---|---|
-| Side panel ↔ bottom plate | 3 per side (6 total) | Heaviest load path. |
-| Side panel ↔ shelf 1 | 3 per side (6 total) | Tray + middle shelf load. |
+| Side panel ↔ shelf 1 (bottom plate) | 3 per side (6 total) | Heaviest load path; full-depth bottom. |
 | Side panel ↔ shelf 2 | 3 per side (6 total) | Symmetric with other shelves. |
+| Side panel ↔ shelf 3 | 3 per side (6 total) | Symmetric with other shelves. |
+| Side panel ↔ shelf 4 | 3 per side (6 total) | Top shelf. |
 | Side panel ↔ front kick plate | 1 per side (2 total) | Centered in the 25mm-tall kick plate end. |
 | Side panel ↔ back kick plate | 1 per side (2 total) | Centered in the 25mm-tall kick plate end. |
-| Side panel ↔ back plate | 4 per side (8 total) | Distribute top to bottom. |
-| Side panel ↔ front lip | 1 per side (2 total) | Centered in the 37mm lip end. |
-| Cross-brace ↔ bottom plate (from below) | 3–4 wood screws | Drive up into the bottom plate's underside. |
-| Shelf 2 ↔ front lip (from below) | 2 wood screws | Hidden under shelf 2. |
+| Side panel ↔ back plate | 5 per side (10 total) | Distribute top to bottom. |
+| Side panel ↔ front lip | 1 per side (2 total) | Centered in the 25mm-tall lip end. |
+| Cross-brace ↔ shelf 1 (from below) | 3–4 wood screws | Drive up into the bottom plate's underside. |
+| Shelf 4 ↔ front lip (from below) | 2 wood screws | Hidden under shelf 4. |
 
-~30 Confirmats + ~7 wood screws + glue everywhere.
+Exact per-hole positions (Front/Back/Height in mm, grouped by joint) are
+generated from the model into **`Build/Screws.md`** on every `task run` —
+20 Confirmats per side panel, 40 total, plus ~7 wood screws.
 
 ## Techniques
 
