@@ -1,6 +1,7 @@
 import Cadova
 
 let cutReg = CutRegistry()
+let screwReg = ScrewRegistry()
 let nesting = nestingPlan(dims: CaddyDimensions())
 
 await Project(root: "Build") {
@@ -134,28 +135,38 @@ await Model("caddy") {
     let lipY = t1 / 2
     let lipZ = shelf4Z + lipHeight / 2
 
-    let holes: [(y: Double, z: Double)] = {
-        var out: [(y: Double, z: Double)] = []
-        for y in shelf1Ys {
-            out.append((y, shelf1ZMid))
+    // Labeled hole list, ordered as it reads in Build/Screws.md. Front/Back are
+    // measured from the panel's outer edges (Front + Back = outerDepth); Height
+    // is up from the panel's bottom edge, which sits skirtHeight below z = 0.
+    let holes: [ScrewHole] = {
+        func mk(_ group: String, _ label: String, y: Double, z: Double) -> ScrewHole {
+            ScrewHole(
+                group: group, label: label, y: y, z: z,
+                front: y, back: outerDepth - y, height: z + skirtHeight
+            )
         }
-        for y in shelf2Ys {
-            out.append((y, shelf2ZMid))
+        let shelfLabels = ["Front", "Middle", "Back"]
+        var out: [ScrewHole] = []
+        out.append(mk("Bottom kick pair", "Front kick", y: frontKickY, z: kickZ))
+        out.append(mk("Bottom kick pair", "Back kick", y: backKickY, z: kickZ))
+        for (group, ys, z) in [
+            ("Shelf 1 (bottom plate)", shelf1Ys, shelf1ZMid),
+            ("Shelf 2", shelf2Ys, shelf2ZMid),
+            ("Shelf 3", shelf3Ys, shelf3ZMid),
+            ("Shelf 4", shelf4Ys, shelf4ZMid),
+        ] {
+            for (i, y) in ys.enumerated() {
+                out.append(mk(group, shelfLabels[i], y: y, z: z))
+            }
         }
-        for y in shelf4Ys {
-            out.append((y, shelf4ZMid))
+        let backLabels = ["Bottom", "2", "3", "4", "Top"]
+        for (i, z) in backPlateZs.enumerated() {
+            out.append(mk("Back plate column", backLabels[i], y: backPlateY, z: z))
         }
-        for y in shelf3Ys {
-            out.append((y, shelf3ZMid))
-        }
-        out.append((frontKickY, kickZ))
-        out.append((backKickY, kickZ))
-        for z in backPlateZs {
-            out.append((backPlateY, z))
-        }
-        out.append((lipY, lipZ))
+        out.append(mk("Top lip", "Lip", y: lipY, z: lipZ))
         return out
     }()
+    for hole in holes { screwReg.record(hole) }
 
     // Left side — clearance holes enter at x = 0 (outside) and extend in +x.
     sidePanel
@@ -937,3 +948,6 @@ try annotateNestingSVG(at: "Build/Nesting.svg", plan: nesting)
 
 // Frame cutlist, derived from the bounding boxes measured during the build.
 try writeCutlist(cutReg.all, to: "Docs/Cutlist.md")
+
+// Confirmat screw positions, per side panel, collected during the build.
+try writeScrews(screwReg.all, to: "Build/Screws.md")
