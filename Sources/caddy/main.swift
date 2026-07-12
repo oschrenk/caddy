@@ -883,6 +883,22 @@ await Model("caddy") {
         )
         .inPart(gearPart)
 
+    // UDR7 (UniFi Dream Router 7) standing on shelf 4, in the open gap between
+    // the headphones (left) and the laptop stand (right). Y-centered in depth.
+    // Shelf 4 is open-topped, so the 184 mm cylinder has the headroom it needs.
+    let udr7 = UDR7()
+    let headphonesRightX = t1 + wiggleRoom + headphones.width
+    let laptopRegionLeftX = t1 + innerWidth - wiggleRoom - macbook.width
+    let udr7CenterX = (headphonesRightX + laptopRegionLeftX) / 2
+    let udr7CenterY = innerDepth / 2
+    udr7
+        .translated(
+            x: udr7CenterX - udr7.diameter / 2,
+            y: udr7CenterY - udr7.diameter / 2,
+            z: shelf4Z
+        )
+        .inPart(gearPart)
+
     // *************************
     // * ALUMINIUM PROFILE (visual reference)
     // *************************
