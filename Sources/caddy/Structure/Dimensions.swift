@@ -23,7 +23,7 @@ struct CaddyDimensions {
         shelf2Z: Double = 287.0,
         shelf4Z: Double = 600.0,
         shelf3TopGap: Double = 110.0, // clearance for wooden box (105 mm) + 5 mm slack
-        skirtHeight: Double = 25.0,
+        skirtHeight: Double = 24.0,
         casterDiameter: Double = 45.7,
         frontInset: Double = 25.0
     ) {
