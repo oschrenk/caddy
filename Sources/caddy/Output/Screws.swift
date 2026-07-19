@@ -52,8 +52,12 @@ func writeScrews(_ holes: [ScrewHole], to path: String = "Screws.md") throws {
         grouped[h.group, default: []].append(h)
     }
 
+    md += "## Side panel\n\n"
+    md += "Both side panels are mirror-identical; every Confirmat below is\n"
+    md += "driven through the panel into the part named by each subsection.\n\n"
+
     for group in order {
-        md += "## \(group)\n\n"
+        md += "### \(group)\n\n"
         md += "| Hole | Front | Back | Height |\n"
         md += "|---|---|---|---|\n"
         for h in grouped[group]! {
