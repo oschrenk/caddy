@@ -58,10 +58,10 @@ func writeScrews(_ holes: [ScrewHole], to path: String = "Screws.md") throws {
 
     for group in order {
         md += "### \(group)\n\n"
-        md += "| Hole | Front | Back | Height |\n"
-        md += "|---|---|---|---|\n"
+        md += "| Hole | Front | Back | Height | 1000−Height |\n"
+        md += "|---|---|---|---|---|\n"
         for h in grouped[group]! {
-            md += "| \(h.label) | \(fmt(h.front)) | \(fmt(h.back)) | \(fmt(h.height)) |\n"
+            md += "| \(h.label) | \(fmt(h.front)) | \(fmt(h.back)) | \(fmt(h.height)) | \(fmt(1000 - h.height)) |\n"
         }
         md += "\n"
     }

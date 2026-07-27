@@ -1,17 +1,20 @@
 import Cadova
 
-// Vertical laptop/tablet stand modeled after the UGREEN 3-slot aluminum stand.
-// A flat base plate carries four upright aluminum fins; the gaps between
-// adjacent fins are the device slots. Each fin's body has 3 arched cutouts
-// giving the open colonnade look seen from the side. Black silicone pads line
-// the slot floors and the inner fin faces (where laptops touch).
+// Vertical laptop/tablet stand modeled after the UGREEN aluminum stand.
+// A flat base plate carries a row of upright aluminum fins; the gaps between
+// adjacent fins are the device slots (openings). Each fin's body has an arched
+// cutout giving the open colonnade look seen from the side. Black silicone
+// pads line the slot floors and the inner fin faces (where devices touch).
+//
+// The number of openings is driven entirely by `slotThicknesses`: one entry
+// per slot, low-y to high-y. N entries → N openings and N+1 fins. Add or
+// remove an entry to change how many openings the stand has; everything else
+// (fin positions, depth, pads) derives from it.
 //
 // Coordinate convention (stand-local):
 //   x — slot length (laptop hinge axis); the stand's long dimension
-//   y — slot arrangement (4 fins, 3 slots between them)
+//   y — slot arrangement (fins and the slots between them)
 //   z — vertical; z=0 is the underside of the rubber feet
-//
-// Slot order along +y, low to high: MacBook Pro 16", MacBook Neo, iPad.
 struct LaptopStand: Shape3D {
     // 5.9 in (~150 mm) — the actual UGREEN footprint. Laptops overhang the
     // stand on both sides; the stand only supports them in the middle.
@@ -33,11 +36,11 @@ struct LaptopStand: Shape3D {
     let baseCornerRadius = 14.0
     let baseTopChamfer = 1.5
 
-    // Slot widths driven by device thicknesses + clearance.
+    // One entry per opening, low-y to high-y — the device thickness the slot is
+    // sized for. THE NUMBER OF OPENINGS IS THIS ARRAY'S COUNT: add/remove an
+    // entry to change it. Sized from the device models it holds.
+    let slotThicknesses = [MacBookPro16().thickness, MacBookNeo().thickness]
     let slotClearance = 2.0
-    let mbpThickness = 16.8
-    let mbnThickness = 12.7
-    let ipadThickness = 5.3
 
     // Silicone pads (slot floors + inner fin faces).
     let padThickness = 1.5
@@ -51,24 +54,28 @@ struct LaptopStand: Shape3D {
     let footInset = 10.0
 
     // ---- Derived dimensions ----
-    var mbpSlotWidth: Double { mbpThickness + 2 * slotClearance }
-    var mbnSlotWidth: Double { mbnThickness + 2 * slotClearance }
-    var ipadSlotWidth: Double { ipadThickness + 2 * slotClearance }
+    var slotWidths: [Double] { slotThicknesses.map { $0 + 2 * slotClearance } }
+    var finCount: Int { slotThicknesses.count + 1 }
+
+    // Fin center-Y positions (finCount of them), accumulated across the slots.
+    var finYs: [Double] {
+        var ys = [baseOverhang + finThickness / 2]
+        for w in slotWidths {
+            ys.append(ys.last! + finThickness + w)
+        }
+        return ys
+    }
+
+    // Slot center-Y positions (one per opening), midway between adjacent fins.
+    var slotCenterYs: [Double] {
+        zip(finYs, finYs.dropFirst()).map { ($0 + $1) / 2 }
+    }
 
     var width: Double { slotLength + 2 * baseOverhang }
     var depth: Double {
-        2 * baseOverhang + 4 * finThickness + mbpSlotWidth + mbnSlotWidth + ipadSlotWidth
+        2 * baseOverhang + Double(finCount) * finThickness + slotWidths.reduce(0, +)
     }
     var height: Double { footHeight + baseThickness + finHeight }
-
-    private var fin0Y: Double { baseOverhang + finThickness / 2 }
-    private var fin1Y: Double { fin0Y + finThickness + mbpSlotWidth }
-    private var fin2Y: Double { fin1Y + finThickness + mbnSlotWidth }
-    private var fin3Y: Double { fin2Y + finThickness + ipadSlotWidth }
-
-    var mbpSlotY: Double { (fin0Y + fin1Y) / 2 }
-    var mbnSlotY: Double { (fin1Y + fin2Y) / 2 }
-    var ipadSlotY: Double { (fin2Y + fin3Y) / 2 }
 
     var slotBottomZ: Double { footHeight + baseThickness }
 
@@ -81,11 +88,7 @@ struct LaptopStand: Shape3D {
         let aluminum = Color(hex: "8E929A")  // space-gray brushed aluminum
         let silicone = Color(hex: "2A2A2A")  // black silicone pad
 
-        let slots: [(centerY: Double, width: Double)] = [
-            (mbpSlotY, mbpSlotWidth),
-            (mbnSlotY, mbnSlotWidth),
-            (ipadSlotY, ipadSlotWidth),
-        ]
+        let slots = zip(slotCenterYs, slotWidths).map { (centerY: $0.0, width: $0.1) }
 
         return Union {
             // Base plate: rounded corners, gentle top chamfer.
@@ -98,8 +101,8 @@ struct LaptopStand: Shape3D {
                 .translated(z: footHeight)
                 .withMaterial(color: aluminum, metallicness: 0.3, roughness: 0.55)
 
-            // Four upright fins.
-            for finY in [fin0Y, fin1Y, fin2Y, fin3Y] {
+            // Upright fins — one more than the number of openings.
+            for finY in finYs {
                 fin3D
                     .translated(x: baseOverhang, y: finY - finThickness / 2, z: footHeight + baseThickness)
                     .withMaterial(color: aluminum, metallicness: 0.3, roughness: 0.55)

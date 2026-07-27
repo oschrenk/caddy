@@ -10,7 +10,7 @@ struct CaddyDimensions {
     let shelf4Z: Double // top surface of shelf 4 (top, wooden box / iPad level)
     let shelf3TopGap: Double // vertical clearance between shelf 3 top and shelf 4 underside
     let skirtHeight: Double // foot height; matches kick plate + cross-brace
-    let casterDiameter: Double // overall caster height
+    let casterHeight: Double // overall caster height (plate top → wheel bottom)
     let frontInset: Double // gear stand-off from front edge
     let topShelfDepth: Double // depth of top shelf
 
@@ -24,7 +24,7 @@ struct CaddyDimensions {
         shelf4Z: Double = 600.0,
         shelf3TopGap: Double = 110.0, // clearance for wooden box (105 mm) + 5 mm slack
         skirtHeight: Double = 24.0,
-        casterDiameter: Double = 45.7,
+        casterHeight: Double = 44.5,
         frontInset: Double = 25.0
     ) {
         self.topShelfDepth = topShelfDepth
@@ -36,7 +36,7 @@ struct CaddyDimensions {
         self.shelf4Z = shelf4Z
         self.shelf3TopGap = shelf3TopGap
         self.skirtHeight = skirtHeight
-        self.casterDiameter = casterDiameter
+        self.casterHeight = casterHeight
         self.frontInset = frontInset
     }
 

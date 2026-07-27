@@ -27,7 +27,7 @@ await Model("caddy") {
     let shelf1Z = dims.shelf1Z
     let frontInset = dims.frontInset
     let skirtHeight = dims.skirtHeight
-    let casterDiameter = dims.casterDiameter
+    let casterHeight = dims.casterHeight
     let lipHeight = dims.lipHeight
     let frontHeight = dims.frontHeight
     let flatRun = dims.flatRun
@@ -51,7 +51,6 @@ await Model("caddy") {
     let macbookAirPart = Part("MacBook Air 15\"")
     let macbookAir13Part = Part("MacBook Air 13\"")
     let macbookNeoPart = Part("MacBook Neo")
-    let ipadPart = Part("iPad")
     let laptopStandPart = Part("Laptop stand")
     let magicKeyboardPart = Part("Magic Keyboard")
     let magicTrackpadPart = Part("Magic Trackpad")
@@ -326,8 +325,21 @@ await Model("caddy") {
             .inPart(woodScrewsPart)
     }
 
-    // Casters: 4 × casterDiameter spheres beneath the bottom plate
-    casters(width: outerWidth, depth: outerDepth, diameter: casterDiameter)
+    // Casters: 4 swivel casters screwed under the bottom plate. Each base
+    // plate's edge sits `casterEdgeGap` in from the inner faces of the side
+    // panels (x) and the kick plates / bottom lips (y).
+    let casterPlate = CasterPlate()
+    let casterEdgeGap = 45.0
+    let casterXs = [
+        t1 + casterEdgeGap + casterPlate.width / 2,
+        (outerWidth - t1) - casterEdgeGap - casterPlate.width / 2,
+    ]
+    let casterYs = [
+        t1 + casterEdgeGap + casterPlate.depth / 2,
+        (outerDepth - t1) - casterEdgeGap - casterPlate.depth / 2,
+    ]
+    let casterPoints = casterXs.flatMap { x in casterYs.map { y in (x: x, y: y) } }
+    casters(at: casterPoints)
         .colored(.darkGray)
         .inPart(castersPart)
 
@@ -720,12 +732,12 @@ await Model("caddy") {
     // *************************
     // Rotated 90° around z so the long side runs along y, then placed behind
     // the caddy (positive y), x-aligned with the caddy footprint, sitting on
-    // the same floor as the casters (z = -casterDiameter at the bottom of the feet).
+    // the same floor as the casters (z = -casterHeight at the bottom of the feet).
     let standingDesk = StandingDesk()
     let standingDeskGap = 50.0
     let deskTx = (outerWidth - standingDesk.topDepth) / 2
     let deskTy = outerDepth + standingDeskGap
-    let deskTz = -casterDiameter
+    let deskTz = -casterHeight
     let deskTopZ = deskTz + standingDesk.deskHeight  // world z of top surface of desktop
     standingDesk
         .rotated(z: 90°)
@@ -739,11 +751,11 @@ await Model("caddy") {
     // Centered on the desktop. Rotated 180° around z so the screen faces +y
     // (away from the caddy), i.e. toward a viewer standing at the far end.
     let monitor = Monitor()
-    // Back of the monitor against the high-x long edge of the desk
-    // (small inset from the edge). Y-centered on the desk's long axis.
+    // Back of the monitor set in from the high-x long edge of the desk,
+    // pulled a few cm toward the front. Y-centered on the desk's long axis.
     // After 270° rotation the screen normal points -x.
     let monitorRotated = monitor.rotated(z: 270°).aligned(at: .min)
-    let monitorEdgeInset = 30.0
+    let monitorEdgeInset = 70.0
     monitorRotated
         .measuringBounds { geom, box in
             let deskXMax = deskTx + standingDesk.topDepth
@@ -781,52 +793,72 @@ await Model("caddy") {
         .inPart(magicTrackpadPart)
 
     // *************************
-    // * LAPTOP STAND on shelf 4 (left). Holds MBP 16, MBN, iPad hinge-down.
+    // * LAPTOP STAND on the standing desk. Holds MBP 16 and MacBook Neo
+    // * hinge-down, long edge along the desk's long edge (world y). Placed at
+    // * the back, halfway between the desk's middle and its right-back corner
+    // * (right = the -y / caddy-side end, viewed from the keyboard).
     // *************************
     let stand = LaptopStand()
     let macbook = MacBookPro16()
     let macbookAir = MacBookAir15()
     let macbookAir13 = MacBookAir13()
     let macbookNeo = MacBookNeo()
-    let ipad = Ipad()
     let boxCount = 5
 
-    // The stand is narrower than the largest laptop — laptops overhang. Pin the
-    // MBP 16's right edge `wiggleRoom` from the right side panel and center the
-    // stand under it.
-    let standX = t1 + innerWidth - wiggleRoom - (stand.width + macbook.width) / 2
-    let standY = (innerDepth - stand.depth) / 2
-    let standZ = shelf4Z
+    // Stand pushed fully to the back (high-x) edge with a small margin;
+    // 1/4 of the long axis in from the right-back corner along y.
+    let standBackInset = 20.0
+    let standTargetY = deskTy + 0.25 * standingDesk.topWidth
+    // Rotate 90° about z so the long edge runs along world y. The rotated
+    // footprint spans stand.depth in x and stand.width in y. standTx is the
+    // back (max-x) edge; standTy offsets so the y-extent centers on the target.
+    let standTx = deskTx + standingDesk.topDepth - standBackInset
+    let standTy = standTargetY - stand.width / 2
+    let standTz = deskTopZ
 
     stand
-        .translated(x: standX, y: standY, z: standZ)
+        .rotated(z: 90°)
+        .translated(x: standTx, y: standTy, z: standTz)
         .inPart(laptopStandPart)
 
-    // Devices placed vertically: rotate +90° around x so the depth axis points
-    // up and the thickness axis sits across the slot. Aligned(.min) so the
-    // device sits with hinge at z = 0 of its local frame.
+    // Devices stood vertically in the slots: rotate +90° about x (depth axis
+    // up, thickness across the slot), aligned(.min) onto the slot floor, then
+    // carried through the stand's world transform. MBP in slot 0, Neo in slot 1.
+    macbook
+        .rotated(x: 90°)
+        .aligned(at: .min)
+        .translated(
+            x: (stand.width - macbook.width) / 2,
+            y: stand.slotCenterYs[0] - macbook.thickness / 2,
+            z: stand.slotBottomZ
+        )
+        .rotated(z: 90°)
+        .translated(x: standTx, y: standTy, z: standTz)
+        .inPart(macbookPart)
 
-    // MacBooks laid flat on the standing desk for visual size comparison.
-    // Aligned at the back-left (low-x, high-y) corner of the desktop with a
-    // 30 mm inset, stacked largest to smallest so the size differences read
-    // as visible steps along the +x and -y edges.
+    macbookNeo
+        .rotated(x: 90°)
+        .aligned(at: .min)
+        .translated(
+            x: (stand.width - macbookNeo.width) / 2,
+            y: stand.slotCenterYs[1] - macbookNeo.thickness / 2,
+            z: stand.slotBottomZ
+        )
+        .rotated(z: 90°)
+        .translated(x: standTx, y: standTy, z: standTz)
+        .inPart(macbookNeoPart)
+
+    // MacBook Airs laid flat on the standing desk for visual size comparison.
+    // Back-left (low-x, high-y) corner with a 30 mm inset, larger under smaller.
     let mbStackInset = 30.0
     let mbStackXMin = deskTx + mbStackInset
     let mbStackYMax = deskTy + standingDesk.topWidth - mbStackInset
-
-    macbook
-        .translated(
-            x: mbStackXMin,
-            y: mbStackYMax - macbook.depth,
-            z: deskTopZ
-        )
-        .inPart(macbookPart)
 
     macbookAir
         .translated(
             x: mbStackXMin,
             y: mbStackYMax - macbookAir.depth,
-            z: deskTopZ + macbook.thickness
+            z: deskTopZ
         )
         .inPart(macbookAirPart)
 
@@ -834,27 +866,9 @@ await Model("caddy") {
         .translated(
             x: mbStackXMin,
             y: mbStackYMax - macbookAir13.depth,
-            z: deskTopZ + macbook.thickness + macbookAir.thickness
+            z: deskTopZ + macbookAir.thickness
         )
         .inPart(macbookAir13Part)
-
-    macbookNeo
-        .translated(
-            x: mbStackXMin,
-            y: mbStackYMax - macbookNeo.depth,
-            z: deskTopZ + macbook.thickness + macbookAir.thickness + macbookAir13.thickness
-        )
-        .inPart(macbookNeoPart)
-
-    ipad
-        .rotated(x: 90°)
-        .aligned(at: .min)
-        .translated(
-            x: standX + (stand.width - ipad.width) / 2,
-            y: standY + stand.ipadSlotY - ipad.thickness / 2,
-            z: standZ + stand.slotBottomZ
-        )
-        .inPart(ipadPart)
 
     // Wooden boxes on shelf 3 — a row spaced evenly across innerWidth,
     // rotated 90° around z. Centered in y. Each box gets a different
@@ -903,18 +917,20 @@ await Model("caddy") {
         )
         .inPart(gearPart)
 
-    // UDR7 (UniFi Dream Router 7) standing on shelf 4, in the open gap between
-    // the headphones (left) and the laptop stand (right). Y-centered in depth.
-    // Shelf 4 is open-topped, so the 184 mm cylinder has the headroom it needs.
-    let udr7 = UDR7()
+    // A colorful wooden box on shelf 4 — same box and style as the shelf 3
+    // row (rotated 90° around z, painted). Sits in the open gap between the
+    // headphones (left) and the laptop stand (right), centered in the gap.
+    let shelf4Box = WoodenBox()
     let headphonesRightX = t1 + wiggleRoom + headphones.width
     let laptopRegionLeftX = t1 + innerWidth - wiggleRoom - macbook.width
-    let udr7CenterX = (headphonesRightX + laptopRegionLeftX) / 2
-    let udr7CenterY = innerDepth / 2
-    udr7
+    let shelf4BoxCenterX = (headphonesRightX + laptopRegionLeftX) / 2
+    shelf4Box
+        .withMaterial(color: moloShockBlue, metallicness: 0, roughness: 0.85)
+        .rotated(z: 90°)
+        .aligned(at: .min)
         .translated(
-            x: udr7CenterX - udr7.diameter / 2,
-            y: udr7CenterY - udr7.diameter / 2,
+            x: shelf4BoxCenterX - shelf4Box.depth / 2,
+            y: box1Y,
             z: shelf4Z
         )
         .inPart(gearPart)
@@ -924,7 +940,7 @@ await Model("caddy") {
     // *************************
     // item Profile 5 20x20, standing on the floor to the left of the caddy.
     TSlotExtrusion()
-        .translated(x: -60, y: outerDepth / 2, z: -casterDiameter)
+        .translated(x: -60, y: outerDepth / 2, z: -casterHeight)
         .inPart(profilePart)
 }
 
