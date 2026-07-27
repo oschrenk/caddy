@@ -525,136 +525,114 @@ await Model("caddy") {
         .withMaterial(color: Color(hex: "2A2A2A"), metallicness: 0, roughness: 0.4)
         .inPart(gearPart)
 
-    // switch-flex:
-    // mounted to the underside of shelf 2, centered on the ups in x.
+    // switch-flex: stood vertically against the inner face of the back plate,
+    // centered behind the Unas. Rotated so the long axis is vertical and the
+    // thin dimension lies flat against the plate.
     let sw = SwitchFlex()
-    let switchX = upsX + (ups.width - sw.width) / 2
-    let switchZ = (shelf2Z - t1) - sw.height
+    let swXExtent = sw.depth   // 99.4 across the plate (x)
+    let swYExtent = sw.height  // 33.5 out from the plate (y)
+    let swZExtent = sw.width   // 212.9 vertical (z)
+    let switchX = unasX + (unas.width - swXExtent) / 2
+    let switchY = innerDepth - swYExtent
+    let bayHeight = (shelf2Z - t1) - shelf1Z
+    let switchZ = shelf1Z + (bayHeight - swZExtent) / 2
     sw.withMaterial(color: Color(hex: "F5F5F5"), metallicness: 0, roughness: 0.35)
-        .translated(x: switchX, y: frontInset, z: switchZ).inPart(gearPart)
+        .rotated(y: 90°)
+        .rotated(z: -90°)
+        .aligned(at: .min)
+        .translated(x: switchX, y: switchY, z: switchZ)
+        .inPart(gearPart)
 
-    // AC adapter DC cable: from the strain relief at the top of the AC,
-    // down to the base shelf, then forward and right along the base, and
-    // up into the right side of the SwitchFlex near the back.
+    // Cable landing zone: the switch's front face (-y), centered in x, with a
+    // routing plane a little in front of it. Cable segments climb straight up
+    // (+z, parallel to the default sweep target → frame singularity), so steer
+    // the sweep frame with an off-axis direction.
+    let swCenterX = switchX + swXExtent / 2
+    let swFrontY = switchY
+    let swApproachY = swFrontY - 12
+    let cableTarget: ReferenceTarget = .direction(Direction3D(Vector3D(1, -1, -1)))
+
+    // AC adapter DC cable: from the strain relief at the top of the AC adapter
+    // (right side), down to the base, left along the base to below the switch,
+    // then up the front of the switch and into its front face near the top.
     let acDcStartX = adapterX + adapter.depth / 2
     let acDcStartY = adapterY + adapter.height / 2
     let acDcStartZ = adapterZ + adapter.width + 18  // strain relief tip (3 boss + 15 cone)
     let acDcBaseZ  = shelf1Z + 3
-    let acDcEndX   = switchX + sw.width - 2          // 2mm into right face
-    let acDcEndY   = frontInset + sw.depth - 10      // toward the back of the right side
-    let acDcEndZ   = switchZ + sw.height / 2
+    let acDcPlugX  = swCenterX + swXExtent / 2 - 15  // right of the front face
+    let acDcPlugZ  = switchZ + swZExtent - 30        // near the top
 
     Circle(diameter: 3)
-        .swept(along: BezierPath3D(from: [acDcStartX, acDcStartY, acDcStartZ]) {
-            // 1. Curve forward and right out of the strain relief, drop to base.
-            curve(
-                controlX: acDcStartX + 50, controlY: acDcStartY - 60, controlZ: acDcStartZ,
-                endX: acDcStartX + 80, endY: acDcStartY - 80, endZ: acDcBaseZ
-            )
-            // 2. Along the base, forward and right to behind the switch's right side.
-            curve(
-                controlX: acDcEndX, controlY: acDcStartY - 80, controlZ: acDcBaseZ,
-                endX: acDcEndX, endY: acDcEndY + 25, endZ: acDcBaseZ
-            )
-            // 3. Up the back-right corner and into the right side of the switch.
-            curve(
-                controlX: acDcEndX, controlY: acDcEndY + 25, controlZ: acDcEndZ,
-                endX: acDcEndX, endY: acDcEndY, endZ: acDcEndZ
-            )
-        })
+        .swept(
+            along: BezierPath3D(from: [acDcStartX, acDcStartY, acDcStartZ]) {
+                // 1. Off the strain relief, curve down to the base.
+                curve(
+                    controlX: acDcStartX + 40, controlY: acDcStartY - 70, controlZ: acDcStartZ,
+                    endX: acDcStartX, endY: acDcStartY - 80, endZ: acDcBaseZ
+                )
+                // 2. Along the base, left toward the switch x, into the front gap.
+                curve(
+                    controlX: (acDcStartX + acDcPlugX) / 2, controlY: swApproachY, controlZ: acDcBaseZ,
+                    endX: acDcPlugX, endY: swApproachY, endZ: acDcBaseZ
+                )
+                // 3. Up the front of the switch and into its front face.
+                curve(
+                    controlX: acDcPlugX, controlY: swApproachY, controlZ: acDcPlugZ,
+                    endX: acDcPlugX, endY: swFrontY, endZ: acDcPlugZ
+                )
+            },
+            toward: cableTarget
+        )
         .withMaterial(color: .white, metallicness: 0, roughness: 0.4)
         .inPart(gearPart)
 
-    // White 3mm cable: saddle (back-bottom of Unas) → straight back to the
-    // backplate → along the backplate to Pi rack center → up to just under
-    // shelf 2 → across to the SwitchFlex → into its back face.
-    // Built as straight runs joined by quadratic Beziers whose control point
-    // sits at the sharp corner — that gives a rounded corner with matching
-    // tangents on both sides (no kinks).
-    let cornerR = 25.0
-    let backplateY = innerDepth - 8.0          // 8mm clearance off backplate
-
-    let cStartX = unasX + unas.width / 2
+    // White 3mm cable: saddle (back-bottom of the Unas) → back into the gap in
+    // front of the switch → up → into the switch's front face.
     let cStartZ = shelf1Z + 5             // mid-height of saddle
     let cPiX    = piX + pi.width / 2
-    let cTopZ   = shelf2Z - t1 - 10            // 10mm below shelf 2
-    let cEndX   = switchX + sw.width / 2
-    let cEndY   = frontInset + sw.depth        // back face of SwitchFlex
-    let cEndZ   = switchZ + sw.height / 2
+    let unasPlugZ = switchZ + 30
 
     Circle(diameter: 3)
-        .swept(along: BezierPath3D(from: [cStartX, frontInset + unas.depth, cStartZ]) {
-            // Straight back toward the backplate, stop one corner-radius short.
-            line(y: backplateY - cornerR)
-            // Round corner: +Y → +X
-            curve(
-                controlX: cStartX, controlY: backplateY, controlZ: cStartZ,
-                endX: cStartX + cornerR, endY: backplateY, endZ: cStartZ
-            )
-            // Along the backplate to one corner-radius before the Pi center x.
-            line(x: cPiX - cornerR)
-            // Round corner: +X → +Z (turn upward)
-            curve(
-                controlX: cPiX, controlY: backplateY, controlZ: cStartZ,
-                endX: cPiX, endY: backplateY, endZ: cStartZ + cornerR
-            )
-            // Straight up to one corner-radius below the under-shelf height.
-            line(z: cTopZ - cornerR)
-            // Round corner: +Z → +X (turn toward the flex)
-            curve(
-                controlX: cPiX, controlY: backplateY, controlZ: cTopZ,
-                endX: cPiX + cornerR, endY: backplateY, endZ: cTopZ
-            )
-            // Across to one corner-radius before the flex center x.
-            line(x: cEndX - cornerR)
-            // Final corner sweeping down/forward into the back of the SwitchFlex.
-            curve(
-                controlX: cEndX, controlY: backplateY, controlZ: cTopZ,
-                endX: cEndX, endY: cEndY, endZ: cEndZ
-            )
-        })
+        .swept(
+            along: BezierPath3D(from: [swCenterX, frontInset + unas.depth, cStartZ]) {
+                // Back and up to the plug height, in the gap in front of the switch.
+                curve(
+                    controlX: swCenterX, controlY: swApproachY, controlZ: cStartZ,
+                    endX: swCenterX, endY: swApproachY, endZ: unasPlugZ
+                )
+                // Into the front face.
+                curve(
+                    controlX: swCenterX, controlY: swApproachY, controlZ: unasPlugZ,
+                    endX: swCenterX, endY: swFrontY, endZ: unasPlugZ
+                )
+            },
+            toward: cableTarget
+        )
         .withSegmentation(count: 32)
         .withMaterial(color: .white, metallicness: 0, roughness: 0.4)
         .inPart(gearPart)
 
-    // White 3mm cables — one per Pi: out the back, into the backplate, up to
-    // 10mm under shelf 2, across to the flex, into its back face. Same
-    // routing pattern as the Unas cable, just starting at each Pi's back.
-    // Use a non-axis-aligned target direction for the swept frame to avoid a
-    // Cadova frame-angle singularity when the path tangent is parallel to the
-    // default `.negativeZ` target (the +Z climb section).
-    let cableTarget: ReferenceTarget = .direction(Direction3D(Vector3D(1, -1, -1)))
-    // Fan the 3 Pi cables out in x so they don't visually merge: each cable
-    // exits its Pi back, climbs the backplate, and plugs into the flex back
-    // at its own offset.
-    let piCableOffsets = [-7.0, 0.0, 7.0]
+    // White 3mm cables — one per Pi: out the back, forward into the gap in front
+    // of the switch while curving over to the switch x and up, then into the
+    // switch's front face. Each plugs in at its own x-offset and height.
+    let piCableOffsets = [-15.0, 0.0, 15.0]
+    let piPlugZs = [switchZ + 45, switchZ + 80, switchZ + 115]
     for (i, piCenterZ) in pi.piCenterZs.map({ shelf1Z + $0 }).enumerated() {
-        let xOff = piCableOffsets[i]
-        let pX = cPiX + xOff
-        let eX = cEndX + xOff
+        let pX = cPiX + piCableOffsets[i]
+        let plugX = swCenterX + piCableOffsets[i]
+        let plugZ = piPlugZs[i]
         Circle(diameter: 3)
             .swept(
                 along: BezierPath3D(from: [pX, frontInset + pi.piBackY, piCenterZ]) {
-                    // Straight back to the backplate (minus cornerR).
-                    line(y: backplateY - cornerR)
-                    // Round corner: +Y → +Z (turn upward against the backplate).
+                    // Back, over toward the switch x, and up to the plug height.
                     curve(
-                        controlX: pX, controlY: backplateY, controlZ: piCenterZ,
-                        endX: pX, endY: backplateY, endZ: piCenterZ + cornerR
+                        controlX: pX, controlY: swApproachY, controlZ: piCenterZ,
+                        endX: plugX, endY: swApproachY, endZ: plugZ
                     )
-                    // Climb to one corner-radius below the under-shelf height.
-                    line(z: cTopZ - cornerR)
-                    // Round corner: +Z → +X (turn toward the flex).
+                    // Into the switch's front face.
                     curve(
-                        controlX: pX, controlY: backplateY, controlZ: cTopZ,
-                        endX: pX + cornerR, endY: backplateY, endZ: cTopZ
-                    )
-                    // Across to one corner-radius before this cable's flex x.
-                    line(x: eX - cornerR)
-                    // Sweep down/forward into the back of the SwitchFlex.
-                    curve(
-                        controlX: eX, controlY: backplateY, controlZ: cTopZ,
-                        endX: eX, endY: cEndY, endZ: cEndZ
+                        controlX: plugX, controlY: swApproachY, controlZ: plugZ,
+                        endX: plugX, endY: swFrontY, endZ: plugZ
                     )
                 },
                 toward: cableTarget
