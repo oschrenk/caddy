@@ -46,6 +46,7 @@ await Model("caddy") {
     let confirmatsPart = Part("Confirmats")
     let gearPart       = Part("Gear")
     let standingDeskPart = Part("Standing desk")
+    let deskMatPart = Part("Desk mat")
     let monitorPart = Part("Monitor")
     let macbookPart = Part("MacBook Pro 16\"")
     let macbookAirPart = Part("MacBook Air 15\"")
@@ -766,30 +767,50 @@ await Model("caddy") {
         .inPart(monitorPart)
 
     // *************************
-    // * KEYBOARD + TRACKPAD on the standing desk
+    // * DESK MAT + KEYBOARD + TRACKPAD on the standing desk
     // *************************
-    // Both sit near the user-side (low-x) edge of the desk top. Each is
-    // self-centered, then rotated ~90° around z so its long axis runs along y,
-    // then placed. A few degrees off true square gives a "real desk" look.
+    // Grey felt mat centered on the desk, nudged toward the front (low-x).
+    // 70 × 30 cm, 3 mm thick, long side along the desk's long axis (y).
+    let matWidth = 700.0      // along y (desk long axis)
+    let matDepth = 300.0      // along x (desk short axis)
+    let matThickness = 3.0
+    let matFrontOffset = 130.0 // shift toward the front (low-x) from desk center
+    let matCenterX = deskTx + standingDesk.topDepth / 2 - matFrontOffset
+    let matCenterY = deskTy + standingDesk.topWidth / 2
+
+    Box([matDepth, matWidth, matThickness])
+        .translated(
+            x: matCenterX - matDepth / 2,
+            y: matCenterY - matWidth / 2,
+            z: deskTopZ
+        )
+        .withMaterial(color: Color(hex: "8C8C8C"), metallicness: 0, roughness: 0.95)
+        .inPart(deskMatPart)
+
+    // Keyboard + trackpad side by side on top of the mat (raised by its
+    // thickness), centered on the mat. Keyboard toward +y, trackpad toward -y.
+    // Each is self-centered, then rotated a few degrees off square for a
+    // "real desk" look.
     let magicKb = MagicKeyboard()
     let magicTp = MagicTrackpad()
     let kbTpGap = 50.0
-    let kbFromFrontEdge = 200.0
-    let kbCenterX = deskTx + kbFromFrontEdge
-    let kbCenterY = deskTy + standingDesk.topWidth / 2 + 100
-    let tpCenterX = kbCenterX
-    let tpCenterY = kbCenterY - magicKb.width / 2 - kbTpGap - magicTp.width / 2
+    let kbTpSpan = magicKb.width + kbTpGap + magicTp.width
+    let kbCenterX = matCenterX
+    let kbCenterY = matCenterY + kbTpSpan / 2 - magicKb.width / 2
+    let tpCenterX = matCenterX
+    let tpCenterY = matCenterY - kbTpSpan / 2 + magicTp.width / 2
+    let inputZ = deskTopZ + matThickness
 
     magicKb
         .translated(x: -magicKb.width / 2, y: -magicKb.depth / 2, z: 0)
         .rotated(z: 96°)
-        .translated(x: kbCenterX, y: kbCenterY, z: deskTopZ)
+        .translated(x: kbCenterX, y: kbCenterY, z: inputZ)
         .inPart(magicKeyboardPart)
 
     magicTp
         .translated(x: -magicTp.width / 2, y: -magicTp.depth / 2, z: 0)
         .rotated(z: 84°)
-        .translated(x: tpCenterX, y: tpCenterY, z: deskTopZ)
+        .translated(x: tpCenterX, y: tpCenterY, z: inputZ)
         .inPart(magicTrackpadPart)
 
     // *************************
