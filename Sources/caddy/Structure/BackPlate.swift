@@ -1,8 +1,8 @@
 import Cadova
 
 // Back plate between the side panels, sitting on top of the bottom plate.
-// Has a cable-grommet hole in the lower-right corner. `grommetClearance` is
-// the gap between the hole edge and the nearest back-plate edges.
+// Has a cable-grommet hole in each lower corner. `grommetClearance` is
+// the gap between each hole edge and the nearest back-plate edges.
 struct BackPlate: Shape3D {
     let width: Double
     let thickness: Double
@@ -25,15 +25,18 @@ struct BackPlate: Shape3D {
     }
 
     var body: any Geometry3D {
-        Box([width, thickness, height])
+        let holeZ = grommetClearance + grommetDiameter / 2
+        let holeXs = [
+            grommetClearance + grommetDiameter / 2,          // lower-left
+            width - grommetClearance - grommetDiameter / 2,  // lower-right
+        ]
+        return Box([width, thickness, height])
             .subtracting {
-                Cylinder(diameter: grommetDiameter, height: thickness + 2)
-                    .rotated(x: -90°)
-                    .translated(
-                        x: width - grommetClearance - grommetDiameter / 2,
-                        y: -1,
-                        z: grommetClearance + grommetDiameter / 2
-                    )
+                for holeX in holeXs {
+                    Cylinder(diameter: grommetDiameter, height: thickness + 2)
+                        .rotated(x: -90°)
+                        .translated(x: holeX, y: -1, z: holeZ)
+                }
             }
     }
 }

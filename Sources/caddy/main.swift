@@ -369,8 +369,8 @@ await Model("caddy") {
     let cableY0 = frontInset + 70
     let cableZ0 = shelf1Z + 20
     // Grommet center in world coords (uses BackPlate's default grommet
-    // diameter 50 + clearance 25 in the lower-right corner).
-    let grommetX = t1 + innerWidth - 25 - 25
+    // diameter 50 + clearance 25 in the lower-left corner).
+    let grommetX = t1 + 25 + 25
     let grommetZ = t1 + 25 + 25
     let backPlateInnerY = innerDepth
     Circle(diameter: 6)
