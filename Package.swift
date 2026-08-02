@@ -6,9 +6,9 @@ let package = Package(
     platforms: [.macOS(.v14)],
     dependencies: [
         // see https://github.com/tomasf/Cadova
-        .package(url: "https://github.com/tomasf/Cadova.git", exact: "0.7.0"),
+        .package(url: "https://github.com/tomasf/Cadova.git", exact: "0.8.1"),
         // see https://github.com/tomasf/Helical
-        .package(url: "https://github.com/tomasf/Helical.git", exact: "1.0.2"),
+        .package(url: "https://github.com/tomasf/Helical.git", exact: "1.0.3"),
     ],
     targets: [
         .executableTarget(
