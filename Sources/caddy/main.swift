@@ -886,51 +886,49 @@ await Model("caddy") {
             .inPart(gearPart)
     }
 
-    // Two wooden boxes on shelf 2, side-by-side, left of the tray. The first
-    // is bamboo, the second is painted Molotow #013 DARE orange light.
-    let shelf2BoxColors = [Color(hex: "E8D5B0"), moloPastelOrange]
-    for i in 0 ..< 2 {
-        box1
-            .colored(shelf2BoxColors[i])
+
+    // Top shelf (shelf 4): the big square cemaco box parked on the right
+    // (rotated 90° around z), with three handled boxes lined up on the left.
+    let bigBox = WoodenBoxLarge()
+    let bigBoxX = t1 + innerWidth - boxGap - bigBox.width
+    let bigBoxY = (t1 + innerDepth - bigBox.depth) / 2
+    bigBox
+        .withMaterial(color: moloShockBlue, metallicness: 0, roughness: 0.85)
+        .rotated(z: 90°)
+        .aligned(at: .min)
+        .translated(x: bigBoxX, y: bigBoxY, z: shelf4Z)
+        .inPart(gearPart)
+
+    // Three handled wooden boxes on the left — same box and style as the
+    // shelf 3 row (rotated 90° around z, painted), lined up left-to-right.
+    let leftShelf4Box = WoodenBox()
+    let leftShelf4Colors = [moloSignalYellow, moloKiwi, moloTrafficRed]
+    let leftShelf4Y = (t1 + innerDepth - leftShelf4Box.width) / 2
+    for i in 0 ..< 3 {
+        leftShelf4Box
+            .withMaterial(color: leftShelf4Colors[i], metallicness: 0, roughness: 0.85)
             .rotated(z: 90°)
             .aligned(at: .min)
             .translated(
-                x: t1 + wiggleRoom + Double(i) * (box1.depth + wiggleRoom),
-                y: box1Y,
-                z: shelf2Z
+                x: t1 + boxGap + Double(i) * (leftShelf4Box.depth + boxGap),
+                y: leftShelf4Y,
+                z: shelf4Z
             )
             .inPart(gearPart)
     }
 
-    // Headphones on shelf 4, parked on the left side. Z 90° orients them,
-    // Y 115° tilts them toward the laptop stand.
-    let headphones = Headphones()
-    headphones
-        .rotated(z: 90°)
-        .rotated(y: 145°)
-        .aligned(at: .min)
-        .translated(
-            x: t1 + wiggleRoom,
-            y: (t1 + innerDepth - headphones.width) / 2,
-            z: shelf4Z
-        )
-        .inPart(gearPart)
-
-    // A colorful wooden box on shelf 4 — same box and style as the shelf 3
-    // row (rotated 90° around z, painted). Sits in the open gap between the
-    // headphones (left) and the laptop stand (right), centered in the gap.
-    let shelf4Box = WoodenBox()
-    let headphonesRightX = t1 + wiggleRoom + headphones.width
-    let laptopRegionLeftX = t1 + innerWidth - wiggleRoom - macbook.width
-    let shelf4BoxCenterX = (headphonesRightX + laptopRegionLeftX) / 2
-    shelf4Box
-        .withMaterial(color: moloShockBlue, metallicness: 0, roughness: 0.85)
+    // Shelf 2: an extra-large tall box (254×254×152 mm) on the left, in the
+    // strip freed up next to the tray. Rotated 90° around z to match the
+    // shelf-4 big box.
+    let shelf2Box = WoodenBoxXL()
+    shelf2Box
+        .withMaterial(color: moloBlackberry, metallicness: 0, roughness: 0.85)
         .rotated(z: 90°)
         .aligned(at: .min)
         .translated(
-            x: shelf4BoxCenterX - shelf4Box.depth / 2,
-            y: box1Y,
-            z: shelf4Z
+            x: t1 + boxGap,
+            y: (t1 + innerDepth - shelf2Box.depth) / 2,
+            z: shelf2Z
         )
         .inPart(gearPart)
 
