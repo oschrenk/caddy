@@ -1,10 +1,35 @@
 # Development
 
+## Layout
+
+One Swift package, `Woodwork`, with a shared library and one executable target
+per project:
+
+```
+Sources/
+  Woodwork/     library — Gear/, Hardware/, Output/ (reusable across projects)
+  Caddy/        executable — Structure/, Nesting.swift, main.swift
+```
+
+`Woodwork` holds anything a second project would want: the gear models used for
+scale and fit-checking, hardware (casters, screws), and the cutlist / screw-list
+/ SVG-nesting output helpers. Project targets hold their own geometry and their
+own `main.swift`.
+
+Because `Woodwork` is a separate module, anything it exposes has to be `public`
+— and unlike within a module, public structs don't pick up `Sendable`
+automatically, so plain data types (`CutPart`, `ScrewHole`, `NestLabel`,
+`NestingPlan`) declare it explicitly.
+
 ## Building the model
 
 ```sh
-task run      # swift run caddy → writes caddy.3mf (+ caddy.stl, Nesting.svg)
+task caddy    # swift run caddy → writes Build/Caddy/caddy.3mf
+              #   (+ caddy.stl, Nesting.svg, Screws.md, Docs/Caddy/Cutlist.md)
 ```
+
+Run it from the repo root — the generators write to paths relative to the
+working directory.
 
 The build **requires the decrypted `Assets/*.stl` files** — the model loads
 `Tower.stl`, `Headphones.stl`, and `Raspberry Pi 4 Model B.stl` at generate
@@ -16,7 +41,19 @@ time. On a fresh clone these are encrypted, so run `task decrypt` first (see
 ```
 
 Other targets: `task build` (compile only, no model), `task clean` (wipe
-`.build` + generated files).
+`.build` + every project's generated files), `task caddy:clean` (just the
+caddy's).
+
+## Adding a project
+
+1. `Sources/<Name>/` with a `main.swift` that `import Woodwork`.
+2. In `Package.swift`, add an `.executableTarget(name: "<Name>", dependencies:
+   ["Woodwork", "Cadova", "Helical"], swiftSettings: [.interoperabilityMode(.Cxx)])`
+   plus a lowercase `.executable` product so it runs as `swift run <name>`.
+   The Cxx setting is required on every target that touches Cadova — it wraps
+   the C++ Manifold kernel and the setting does not propagate across modules.
+3. Write output to `Build/<Name>/` and docs to `Docs/<Name>/`.
+4. Add `<name>` and `<name>:clean` tasks to `taskfile.yml`.
 
 ## Encrypted assets
 
@@ -130,7 +167,7 @@ task update     # swift package update
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `The file "Tower.stl" doesn't exist` on `task run` | Assets still encrypted | `task decrypt` |
+| `The file "Tower.stl" doesn't exist` on `task caddy` | Assets still encrypted | `task decrypt` |
 | `*.cott.age` files are ~130 bytes | LFS blobs not pulled (only pointer stubs) | `git lfs pull` (or `task decrypt`) |
 | `ctg decrypt`: no identity / decryption fails | `ctg` didn't find your key | Ensure `~/.config/cottage/identity` exists, or pass `-i <path>` / set `COTTAGE_IDENTITY` |
 | `ctg`: recipient mismatch | Your key isn't an authorized recipient | Have a recipient machine run `ctg sync` to re-encrypt for you (see [Adding a new machine](#adding-a-new-machine--recipient)) |

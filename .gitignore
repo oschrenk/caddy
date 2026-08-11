@@ -1,7 +1,7 @@
 .build/
 .swiftpm/
 /Build/
-/Docs/Cutlist.md
+/Docs/*/Cutlist.md
 /.cottage/identity
 /Assets/Headphones.stl
 /Assets/Tower.stl

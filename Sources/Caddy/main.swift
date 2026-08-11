@@ -1,0 +1,935 @@
+import Cadova
+import Helical
+import Woodwork
+
+let cutReg = CutRegistry()
+let screwReg = ScrewRegistry()
+let nesting = nestingPlan(dims: CaddyDimensions())
+
+await Project(root: "Build/Caddy") {
+
+await Model("caddy") {
+    // *************************
+    // * VARIABLES
+    // *************************
+    let dims = CaddyDimensions()
+
+    // Bind the most-used fields locally so the rest of this file reads
+    // unchanged. Anything not bound here is referenced as `dims.X` below.
+    let t1 = dims.t1
+    let wiggleRoom = dims.wiggleRoom
+    let backHeight = dims.backHeight
+    let outerWidth = dims.outerWidth
+    let outerDepth = dims.outerDepth
+    let innerWidth = dims.innerWidth
+    let innerDepth = dims.innerDepth
+    let shelf2Z = dims.shelf2Z
+    let shelf4Z = dims.shelf4Z
+    let shelf3Z = dims.shelf3Z
+    let shelf1Z = dims.shelf1Z
+    let frontInset = dims.frontInset
+    let skirtHeight = dims.skirtHeight
+    let casterHeight = dims.casterHeight
+    let lipHeight = dims.lipHeight
+    let frontHeight = dims.frontHeight
+    let flatRun = dims.flatRun
+
+    // Parts (toggleable in CadovaViewer)
+    let leftPanelPart  = Part("Side panel (L)")
+    let rightPanelPart = Part("Side panel (R)")
+    let backPlatePart  = Part("Back plate")
+    let shelf1Part     = Part("Shelf 1")
+    let shelf2Part     = Part("Shelf 2")
+    let shelf4Part     = Part("Shelf 4")
+    let shelf3Part     = Part("Shelf 3")
+    let castersPart    = Part("Casters")
+    let skirtPart      = Part("Skirt") // front + back kick, cross-brace, front lip
+    let woodScrewsPart = Part("Wood screws")
+    let confirmatsPart = Part("Confirmats")
+    let gearPart       = Part("Gear")
+    let standingDeskPart = Part("Standing desk")
+    let deskMatPart = Part("Desk mat")
+    let monitorPart = Part("Monitor")
+    let macbookPart = Part("MacBook Pro 16\"")
+    let macbookAirPart = Part("MacBook Air 15\"")
+    let macbookAir13Part = Part("MacBook Air 13\"")
+    let macbookNeoPart = Part("MacBook Neo")
+    let laptopStandPart = Part("Laptop stand")
+    let magicKeyboardPart = Part("Magic Keyboard")
+    let magicTrackpadPart = Part("Magic Trackpad")
+    let profilePart = Part("Aluminium profile")
+
+    // Colors
+    let ral3015 = Color(hex: "E5A4B2") // light pink
+    let ral240_80_15 = Color(hex: "AACDDD") // RAL Design 240 80 15, light pastel blue
+
+    // Molotow Belton Premium 400ml — swatches sampled from shop.molotow.com.
+    let moloSignalYellow = Color(hex: "FFCC00") // #004 signal yellow
+    let moloKiwi         = Color(hex: "96B922") // #150 kiwi
+    let moloShockBlue    = Color(hex: "59A8CD") // #093 shock blue middle
+    let moloTrafficRed   = Color(hex: "D4021E") // #016 traffic red
+    let moloBlackberry   = Color(hex: "673C7C") // #068 blackberry
+    let moloDareOrangeLight = Color(hex: "EB6816") // #013 DARE orange light
+    let moloPastelOrange    = Color(hex: "ED7920") // #012 pastel orange
+
+    // *************************
+    // * FRAME
+    // *************************
+
+    // objects
+    let sidePanel = SidePanel(
+        thickness: t1,
+        depth: outerDepth,
+        backHeight: backHeight,
+        frontHeight: frontHeight,
+        flatRunback: flatRun,
+        flatRunfront: flatRun,
+        skirtHeight: skirtHeight
+    )
+
+    // Confirmat clearance holes on the side panels — one set of (y, z) positions
+    // per panel, mirrored in x for left vs right. Layout per Assembly.md:
+    //
+    //   • Shelf 1 (bottom plate): 3 per side panel
+    //   • Shelf 2:         3 per side panel
+    //   • Shelf 3:         3 per side panel
+    //   • Shelf 4:         3 per side panel
+    //   • Front kick:      1 per side panel
+    //   • Back kick:       1 per side panel
+    //   • Back plate:      5 per side panel (top one close to the peak)
+    //   • Front lip:       1 per side (into the lip's ends) + 2 hidden screws
+    //                       driven up from under shelf 4 into the lip's bottom
+    //
+    let screw = ConfirmatScrew()
+    let edgeMargin = 35.0
+
+    // Shared y-positions for all shelf screws — symmetric from the cabinet's
+    // front and rear faces (front screw 30 mm from y=0, back screw 30 mm from
+    // y=outerDepth, middle centered). Shelves 2/3/4 only reach y=innerDepth,
+    // but the back screw at outerDepth-30 still falls within their edge.
+    let shelfYs = (0 ..< 3).map { edgeMargin + Double($0) * (outerDepth - 2 * edgeMargin) / 2 }
+
+    let shelf1ZMid = t1 / 2
+    let shelf1Ys = shelfYs
+
+    let shelf2ZMid = shelf2Z - t1 / 2
+    let shelf2Ys = shelfYs
+
+    let shelf4ZMid = shelf4Z - t1 / 2
+    let shelf4Ys = shelfYs
+
+    let shelf3ZMid = shelf3Z - t1 / 2
+    let shelf3Ys = shelfYs
+
+    let kickZ = -skirtHeight / 2
+    let frontKickY = t1 / 2
+    let backKickY = outerDepth - t1 / 2
+
+    let backPlateY = outerDepth - t1 / 2
+    let backPlateZs: [Double] = [
+        shelf1ZMid + 60, // 60 mm above shelf 1 screw centerline
+        shelf2ZMid - 60, // 60 mm below shelf 2 screw centerline
+        (shelf2ZMid + shelf3ZMid) / 2, // midway between shelf 2 and shelf 3 screws
+        (shelf3ZMid + shelf4ZMid) / 2, // midway between shelf 3 and shelf 4 screws
+        backHeight - 12.5, // top — matches lip screw inset (12.5 mm from edge)
+    ]
+
+    let lipY = t1 / 2
+    let lipZ = shelf4Z + lipHeight / 2
+
+    // Labeled hole list, ordered as it reads in Build/Caddy/Screws.md. Front/Back are
+    // measured from the panel's outer edges (Front + Back = outerDepth); Height
+    // is up from the panel's bottom edge, which sits skirtHeight below z = 0.
+    let holes: [ScrewHole] = {
+        func mk(_ group: String, _ label: String, y: Double, z: Double) -> ScrewHole {
+            ScrewHole(
+                group: group, label: label, y: y, z: z,
+                front: y, back: outerDepth - y, height: z + skirtHeight
+            )
+        }
+        let shelfLabels = ["Front", "Middle", "Back"]
+        var out: [ScrewHole] = []
+        out.append(mk("Bottom kick pair", "Front kick", y: frontKickY, z: kickZ))
+        out.append(mk("Bottom kick pair", "Back kick", y: backKickY, z: kickZ))
+        for (group, ys, z) in [
+            ("Shelf 1 (bottom plate)", shelf1Ys, shelf1ZMid),
+            ("Shelf 2", shelf2Ys, shelf2ZMid),
+            ("Shelf 3", shelf3Ys, shelf3ZMid),
+            ("Shelf 4", shelf4Ys, shelf4ZMid),
+        ] {
+            for (i, y) in ys.enumerated() {
+                out.append(mk(group, shelfLabels[i], y: y, z: z))
+            }
+        }
+        let backLabels = ["Bottom", "2", "3", "4", "Top"]
+        for (i, z) in backPlateZs.enumerated() {
+            out.append(mk("Back plate column", backLabels[i], y: backPlateY, z: z))
+        }
+        out.append(mk("Top lip", "Lip", y: lipY, z: lipZ))
+        return out
+    }()
+    for hole in holes { screwReg.record(hole) }
+
+    // Left side — clearance holes enter at x = 0 (outside) and extend in +x.
+    sidePanel
+        .subtracting {
+            for hole in holes {
+                screw.clearanceHole(depth: t1 + 4)
+                    .rotated(y: 90°)
+                    .translated(x: -1, y: hole.y, z: hole.z)
+            }
+        }
+        .recordingCut(in: cutReg, name: "Side panel", notes: "Polygon profile")
+        .withMaterial(color: moloSignalYellow, metallicness: 0, roughness: 0.85)
+        .inPart(leftPanelPart)
+
+    // Right side — clearance holes enter at x = t1 (outside) and extend in -x.
+    sidePanel
+        .subtracting {
+            for hole in holes {
+                screw.clearanceHole(depth: t1 + 4)
+                    .rotated(y: -90°)
+                    .translated(x: t1 + 1, y: hole.y, z: hole.z)
+            }
+        }
+        .recordingCut(in: cutReg, name: "Side panel", notes: "Polygon profile")
+        .withMaterial(color: moloSignalYellow, metallicness: 0, roughness: 0.85)
+        .translated(x: outerWidth - t1)
+        .inPart(rightPanelPart)
+
+    // Confirmat screw bodies — one per clearance hole on each side panel,
+    // head flush with the panel's outer face, threads driven into the cabinet.
+    for hole in holes {
+        screw
+            .rotated(y: 90°)
+            .translated(x: 0, y: hole.y, z: hole.z)
+            .inPart(confirmatsPart)
+        screw
+            .rotated(y: -90°)
+            .translated(x: outerWidth, y: hole.y, z: hole.z)
+            .inPart(confirmatsPart)
+    }
+
+    // Back plate (between sides). Sits on top of the bottom plate.
+    BackPlate(width: innerWidth, thickness: t1, height: backHeight - t1)
+        .recordingCut(in: cutReg, name: "Back plate")
+        .withMaterial(color: ral240_80_15, metallicness: 0, roughness: 0.85)
+        .translated(x: t1, y: innerDepth, z: t1)
+        .inPart(backPlatePart)
+
+    // Shelf 1 (the cabinet's bottom plate) — full outer depth so it tucks under the back plate.
+    Shelf(width: innerWidth, depth: outerDepth, thickness: t1)
+        .recordingCut(in: cutReg, name: "Shelf 1", notes: "Full outer depth, tucks under back plate")
+        .withMaterial(color: ral3015, metallicness: 0, roughness: 0.85)
+        .translated(x: t1)
+        .inPart(shelf1Part)
+
+    // Front kick plate — sits between the side-panel feet at z=[-skirtHeight, 0].
+    // Hides the front casters and stiffens the front edge of the bottom plate.
+    KickPlate(width: innerWidth, thickness: t1, height: skirtHeight)
+        .recordingCut(in: cutReg, name: "Kick plate", notes: "Front and back; hides casters")
+        .withMaterial(color: moloSignalYellow, metallicness: 0, roughness: 0.85)
+        .translated(x: t1, z: -skirtHeight)
+        .inPart(skirtPart)
+
+    // Back kick plate — mirrors the front. Hides the back casters.
+    KickPlate(width: innerWidth, thickness: t1, height: skirtHeight)
+        .recordingCut(in: cutReg, name: "Kick plate", notes: "Front and back; hides casters")
+        .withMaterial(color: moloSignalYellow, metallicness: 0, roughness: 0.85)
+        .translated(x: t1, y: outerDepth - t1, z: -skirtHeight)
+        .inPart(skirtPart)
+
+    // Cross-brace centered in x, under the bottom plate.
+    CrossBrace(thickness: t1, depth: outerDepth, height: skirtHeight)
+        .recordingCut(in: cutReg, name: "Cross-brace", notes: "Under bottom plate, centered in x")
+        .withMaterial(color: moloSignalYellow, metallicness: 0, roughness: 0.85)
+        .translated(x: t1 + (innerWidth - t1) / 2, z: -skirtHeight)
+        .inPart(skirtPart)
+
+    // Shelf 2 — top surface at shelf2Z (tray level)
+    Shelf(width: innerWidth, depth: innerDepth, thickness: t1)
+        .recordingCut(in: cutReg, name: "Shelf 2")
+        .withMaterial(color: ral3015, metallicness: 0, roughness: 0.85)
+        .translated(x: t1, z: shelf2Z - t1)
+        .inPart(shelf2Part)
+
+    // Shelf 3 — sits just under shelf 4 with `shelf3TopGap` of headroom above.
+    Shelf(width: innerWidth, depth: innerDepth, thickness: t1)
+        .recordingCut(in: cutReg, name: "Shelf 3")
+        .withMaterial(color: ral3015, metallicness: 0, roughness: 0.85)
+        .translated(x: t1, z: shelf3Z - t1)
+        .inPart(shelf3Part)
+
+    // 2 hidden wood screws (25mm) driven up from below shelf 4 into the lip.
+    // Countersunk head sits flush in the shelf's underside.
+    let underScrew = WoodScrew(length: 25)
+    let underScrewXs = [innerWidth / 4, 3 * innerWidth / 4] // local-shelf2 frame
+
+    // Shelf 4 — top surface at shelf4Z (top, with front lip). Full depth.
+    // Countersunk clearance holes for the underside screws.
+    Shelf(width: innerWidth, depth: innerDepth, thickness: t1)
+        .subtracting {
+            for ux in underScrewXs {
+                underScrew.clearanceHole(depth: t1 + 1)
+                    .translated(x: ux, y: lipY, z: 0)
+            }
+        }
+        .recordingCut(in: cutReg, name: "Shelf 4")
+        .withMaterial(color: ral3015, metallicness: 0, roughness: 0.85)
+        .translated(x: t1, z: shelf4Z - t1)
+        .inPart(shelf4Part)
+
+    // Top-shelf front lip — same cut as a kick plate, used as a tray edge.
+    // Sits ON TOP of shelf 4, front edge flush with the side panels' front.
+    KickPlate(width: innerWidth, thickness: t1, height: lipHeight)
+        .recordingCut(in: cutReg, name: "Front lip", notes: "Same cut as kick plates.")
+        .withMaterial(color: moloSignalYellow, metallicness: 0, roughness: 0.85)
+        .translated(x: t1, z: shelf4Z)
+        .inPart(skirtPart)
+
+    // The 2 underside screws themselves — head's wide top flush with shelf 4's
+    // underside; threads continue up through the shelf and into the lip.
+    for ux in underScrewXs {
+        underScrew
+            .translated(x: t1 + ux, y: lipY, z: shelf4Z - t1)
+            .inPart(woodScrewsPart)
+    }
+
+    // Casters: 4 swivel casters screwed under the bottom plate. Each base
+    // plate's edge sits `casterEdgeGap` in from the inner faces of the side
+    // panels (x) and the kick plates / bottom lips (y).
+    let casterPlate = CasterPlate()
+    let casterEdgeGap = 45.0
+    let casterXs = [
+        t1 + casterEdgeGap + casterPlate.width / 2,
+        (outerWidth - t1) - casterEdgeGap - casterPlate.width / 2,
+    ]
+    let casterYs = [
+        t1 + casterEdgeGap + casterPlate.depth / 2,
+        (outerDepth - t1) - casterEdgeGap - casterPlate.depth / 2,
+    ]
+    let casterPoints = casterXs.flatMap { x in casterYs.map { y in (x: x, y: y) } }
+    casters(at: casterPoints)
+        .colored(.darkGray)
+        .inPart(castersPart)
+
+    // *************************
+    // * Layout
+    // *************************
+
+    // front row: unas + pi-rack + ups: four equal gaps (left | unas | pi | ups | right).
+    let unas = Unas()
+    let pi = PiRack()
+    let ups = Ups()
+
+    let frontGap = (innerWidth - unas.width - pi.width - ups.width) / 4
+    let unasX = t1 + frontGap
+    let piX = unasX + unas.width + frontGap
+    let upsX = piX + pi.width + frontGap
+
+    unas.translated(x: unasX, y: frontInset, z: shelf1Z).inPart(gearPart)
+    pi.translated(x: piX, y: frontInset, z: shelf1Z).inPart(gearPart)
+    ups.withMaterial(color: Color(hex: "2A2A2A"), metallicness: 0, roughness: 0.3)
+        .translated(x: upsX, y: frontInset, z: shelf1Z).inPart(gearPart)
+
+    // Power cable: exits the right side of the UPS, runs back along the
+    // shelf, then up and out through the grommet in the back plate.
+    let cableX0 = upsX + ups.width
+    let cableY0 = frontInset + 70
+    let cableZ0 = shelf1Z + 20
+    // Grommet center in world coords (uses BackPlate's default grommet
+    // diameter 50 + clearance 25 in the lower-left corner).
+    let grommetX = t1 + 25 + 25
+    let grommetZ = t1 + 25 + 25
+    let backPlateInnerY = innerDepth
+    Circle(diameter: 6)
+        .swept(along: BezierPath3D(from: [cableX0, cableY0, cableZ0]) {
+            // 1. Drop down to the shelf, sliding slightly toward the grommet x.
+            curve(
+                controlX: cableX0 + 15, controlY: cableY0, controlZ: cableZ0 - 8,
+                endX: grommetX, endY: cableY0, endZ: shelf1Z + 3
+            )
+            // 2. Run back along the shelf toward the back plate.
+            curve(
+                controlX: grommetX, controlY: cableY0 + 80, controlZ: shelf1Z + 3,
+                endX: grommetX, endY: backPlateInnerY - 30, endZ: shelf1Z + 3
+            )
+            // 3. Rise up and through the grommet hole.
+            curve(
+                controlX: grommetX, controlY: backPlateInnerY - 10, controlZ: grommetZ - 5,
+                endX: grommetX, endY: backPlateInnerY + t1 + 15, endZ: grommetZ
+            )
+        })
+        .withMaterial(color: .black, metallicness: 0, roughness: 0.4)
+        .inPart(gearPart)
+
+    // ac-adapter:
+    // rotated so the long (width) side is vertical (z). Then +90° around z
+    // so the depth runs along x and the height along y. Placed against the backplate,
+    // centered in the gap between unas and ups, and vertically centered between the
+    // shelf 1 (top at z = t1) and the underside of shelf 2.
+    let adapter = AcAdapter210w()
+
+    let bayBottom = t1 // top of bottom plate
+    let bayTop = shelf2Z - t1 // underside of shelf 2
+    let adapterY = innerDepth - adapter.height // back face at backplate
+    let adapterX = upsX + (ups.width - adapter.depth) / 2
+    let adapterZ = bayBottom + (bayTop - bayBottom - adapter.width) / 2
+    adapter
+        .withMaterial(color: Color(hex: "F5F5F5"), metallicness: 0, roughness: 0.35)
+        .rotated(y: 90°)
+        .rotated(z: 90°)
+        .aligned(at: .min)
+        .translated(x: adapterX, y: adapterY, z: adapterZ)
+        .inPart(gearPart)
+
+    // C13 plug body inserted into the C14 inlet on the bottom of the adapter.
+    // Pentagonal "house" shape matching the C14 cutout, slightly smaller for fit.
+    let c13W   = 26.5  // ~0.5 mm smaller than the 27 mm cutout
+    let c13H   = 20.5
+    let c13Cx  = 2.5
+    let c13Cy  = 3.0
+    let c13Len = 30.0  // visible body length below the adapter
+    // C14 hole center in world coords (computed from adapter post-rotation mapping).
+    let c14X = adapterX + adapter.depth / 2   // adapter local y=depth/2 → world x
+    let c14Y = adapterY + adapter.height / 2  // adapter local z=height/2 → world y
+    let c14Z = adapterZ
+    Polygon([
+        Vector2D(x: c13Cx,         y: 0),
+        Vector2D(x: c13W - c13Cx,  y: 0),
+        Vector2D(x: c13W,          y: c13Cy),
+        Vector2D(x: c13W,          y: c13H),
+        Vector2D(x: 0,             y: c13H),
+        Vector2D(x: 0,             y: c13Cy),
+    ])
+    .extruded(height: c13Len)
+    .translated(
+        x: c14X - c13W / 2,
+        y: c14Y - c13H / 2,
+        z: c14Z - c13Len + 2  // top 2 mm inside the recess, rest sticking down
+    )
+    .withMaterial(color: Color(hex: "F5F5F5"), metallicness: 0, roughness: 0.35)
+    .inPart(gearPart)
+
+    // Short power cable exiting the bottom of the C13 plug.
+    let c13CableX0 = c14X
+    let c13CableY0 = c14Y
+    let c13CableZ0 = c14Z - c13Len + 2  // bottom of plug body
+    Circle(diameter: 6)
+        .swept(along: BezierPath3D(from: [c13CableX0, c13CableY0, c13CableZ0]) {
+            // Drop straight down then curve forward
+            curve(
+                controlX: c13CableX0, controlY: c13CableY0, controlZ: c13CableZ0 - 10,
+                endX: c13CableX0, endY: c13CableY0 - 15, endZ: shelf1Z + 3
+            )
+        })
+        .withMaterial(color: Color(hex: "F5F5F5"), metallicness: 0, roughness: 0.4)
+        .inPart(gearPart)
+
+    // Simple NEMA 5-15P plug body sitting on top of one of the UPS outlets.
+    // Outlet xC values are 66.5 / 106.5 / 146.5 / 186.5 in UPS local frame;
+    // use the 2nd outlet.
+    let plugW = 38.0
+    let plugD = 35.0
+    let plugH = 25.0
+    let plugCX = upsX + 106.5
+    let plugCY = frontInset + 75
+    let plugZ  = shelf1Z + 140  // top of UPS
+    Rectangle([plugW, plugD])
+        .rounded(radius: 3)
+        .extruded(height: plugH, topEdge: .fillet(radius: 3))
+        .translated(
+            x: plugCX - plugW / 2,
+            y: plugCY - plugD / 2,
+            z: plugZ
+        )
+        .withMaterial(color: Color(hex: "F5F5F5"), metallicness: 0, roughness: 0.3)
+        .inPart(gearPart)
+
+    // Little white cable exiting the top of the NEMA plug, draping back
+    // and down toward the AC adapter area.
+    let nemaCableStartZ = plugZ + plugH
+    Circle(diameter: 5)
+        .swept(along: BezierPath3D(from: [plugCX, plugCY, nemaCableStartZ]) {
+            // Arc up and back over the rear of the UPS
+            curve(
+                controlX: plugCX, controlY: plugCY + 20, controlZ: nemaCableStartZ + 8,
+                endX: plugCX, endY: plugCY + 35, endZ: nemaCableStartZ
+            )
+            // Drape down behind the UPS toward the AC adapter
+            curve(
+                controlX: plugCX, controlY: plugCY + 45, controlZ: 100,
+                endX: plugCX, endY: plugCY + 60, endZ: 35
+            )
+        })
+        .withMaterial(color: Color(hex: "F5F5F5"), metallicness: 0, roughness: 0.4)
+        .inPart(gearPart)
+
+    // Second NEMA plug — black — on the 3rd outlet, cable dropping toward the back plate.
+    let plug2CX = upsX + 146.5
+    let plug2CY = frontInset + 75
+    Rectangle([plugW, plugD])
+        .rounded(radius: 3)
+        .extruded(height: plugH, topEdge: .fillet(radius: 3))
+        .translated(
+            x: plug2CX - plugW / 2,
+            y: plug2CY - plugD / 2,
+            z: plugZ
+        )
+        .withMaterial(color: Color(hex: "2A2A2A"), metallicness: 0, roughness: 0.3)
+        .inPart(gearPart)
+
+    let plug2CableStartZ = plugZ + plugH
+    Circle(diameter: 5)
+        .swept(along: BezierPath3D(from: [plug2CX, plug2CY, plug2CableStartZ]) {
+            curve(
+                controlX: plug2CX, controlY: plug2CY + 20, controlZ: plug2CableStartZ + 8,
+                endX: plug2CX, endY: plug2CY + 35, endZ: plug2CableStartZ
+            )
+            curve(
+                controlX: plug2CX, controlY: plug2CY + 45, controlZ: 100,
+                endX: plug2CX, endY: plug2CY + 60, endZ: 35
+            )
+        })
+        .withMaterial(color: Color(hex: "2A2A2A"), metallicness: 0, roughness: 0.4)
+        .inPart(gearPart)
+
+    // switch-flex: stood vertically against the inner face of the back plate,
+    // centered behind the Unas. Rotated so the long axis is vertical and the
+    // thin dimension lies flat against the plate.
+    let sw = SwitchFlex()
+    let swXExtent = sw.depth   // 99.4 across the plate (x)
+    let swYExtent = sw.height  // 33.5 out from the plate (y)
+    let swZExtent = sw.width   // 212.9 vertical (z)
+    let switchX = unasX + (unas.width - swXExtent) / 2
+    let switchY = innerDepth - swYExtent
+    let bayHeight = (shelf2Z - t1) - shelf1Z
+    let switchZ = shelf1Z + (bayHeight - swZExtent) / 2
+    sw.withMaterial(color: Color(hex: "F5F5F5"), metallicness: 0, roughness: 0.35)
+        .rotated(y: 90°)
+        .rotated(z: -90°)
+        .aligned(at: .min)
+        .translated(x: switchX, y: switchY, z: switchZ)
+        .inPart(gearPart)
+
+    // Cable landing zone: the switch's front face (-y), centered in x, with a
+    // routing plane a little in front of it. Cable segments climb straight up
+    // (+z, parallel to the default sweep target → frame singularity), so steer
+    // the sweep frame with an off-axis direction.
+    let swCenterX = switchX + swXExtent / 2
+    let swFrontY = switchY
+    let swApproachY = swFrontY - 12
+    let cableTarget: ReferenceTarget = .direction(Direction3D(Vector3D(1, -1, -1)))
+
+    // AC adapter DC cable: from the strain relief at the top of the AC adapter
+    // (right side), down to the base, left along the base to below the switch,
+    // then up the front of the switch and into its front face near the top.
+    let acDcStartX = adapterX + adapter.depth / 2
+    let acDcStartY = adapterY + adapter.height / 2
+    let acDcStartZ = adapterZ + adapter.width + 18  // strain relief tip (3 boss + 15 cone)
+    let acDcBaseZ  = shelf1Z + 3
+    let acDcPlugX  = swCenterX + swXExtent / 2 - 15  // right of the front face
+    let acDcPlugZ  = switchZ + swZExtent - 30        // near the top
+
+    Circle(diameter: 3)
+        .swept(
+            along: BezierPath3D(from: [acDcStartX, acDcStartY, acDcStartZ]) {
+                // 1. Off the strain relief, curve down to the base.
+                curve(
+                    controlX: acDcStartX + 40, controlY: acDcStartY - 70, controlZ: acDcStartZ,
+                    endX: acDcStartX, endY: acDcStartY - 80, endZ: acDcBaseZ
+                )
+                // 2. Along the base, left toward the switch x, into the front gap.
+                curve(
+                    controlX: (acDcStartX + acDcPlugX) / 2, controlY: swApproachY, controlZ: acDcBaseZ,
+                    endX: acDcPlugX, endY: swApproachY, endZ: acDcBaseZ
+                )
+                // 3. Up the front of the switch and into its front face.
+                curve(
+                    controlX: acDcPlugX, controlY: swApproachY, controlZ: acDcPlugZ,
+                    endX: acDcPlugX, endY: swFrontY, endZ: acDcPlugZ
+                )
+            },
+            toward: cableTarget
+        )
+        .withMaterial(color: .white, metallicness: 0, roughness: 0.4)
+        .inPart(gearPart)
+
+    // White 3mm cable: saddle (back-bottom of the Unas) → back into the gap in
+    // front of the switch → up → into the switch's front face.
+    let cStartZ = shelf1Z + 5             // mid-height of saddle
+    let cPiX    = piX + pi.width / 2
+    let unasPlugZ = switchZ + 30
+
+    Circle(diameter: 3)
+        .swept(
+            along: BezierPath3D(from: [swCenterX, frontInset + unas.depth, cStartZ]) {
+                // Back and up to the plug height, in the gap in front of the switch.
+                curve(
+                    controlX: swCenterX, controlY: swApproachY, controlZ: cStartZ,
+                    endX: swCenterX, endY: swApproachY, endZ: unasPlugZ
+                )
+                // Into the front face.
+                curve(
+                    controlX: swCenterX, controlY: swApproachY, controlZ: unasPlugZ,
+                    endX: swCenterX, endY: swFrontY, endZ: unasPlugZ
+                )
+            },
+            toward: cableTarget
+        )
+        .withSegmentation(count: 32)
+        .withMaterial(color: .white, metallicness: 0, roughness: 0.4)
+        .inPart(gearPart)
+
+    // White 3mm cables — one per Pi: out the back, forward into the gap in front
+    // of the switch while curving over to the switch x and up, then into the
+    // switch's front face. Each plugs in at its own x-offset and height.
+    let piCableOffsets = [-15.0, 0.0, 15.0]
+    let piPlugZs = [switchZ + 45, switchZ + 80, switchZ + 115]
+    for (i, piCenterZ) in pi.piCenterZs.map({ shelf1Z + $0 }).enumerated() {
+        let pX = cPiX + piCableOffsets[i]
+        let plugX = swCenterX + piCableOffsets[i]
+        let plugZ = piPlugZs[i]
+        Circle(diameter: 3)
+            .swept(
+                along: BezierPath3D(from: [pX, frontInset + pi.piBackY, piCenterZ]) {
+                    // Back, over toward the switch x, and up to the plug height.
+                    curve(
+                        controlX: pX, controlY: swApproachY, controlZ: piCenterZ,
+                        endX: plugX, endY: swApproachY, endZ: plugZ
+                    )
+                    // Into the switch's front face.
+                    curve(
+                        controlX: plugX, controlY: swApproachY, controlZ: plugZ,
+                        endX: plugX, endY: swFrontY, endZ: plugZ
+                    )
+                },
+                toward: cableTarget
+            )
+            .withSegmentation(count: 32)
+            .withMaterial(color: .white, metallicness: 0, roughness: 0.4)
+            .inPart(gearPart)
+    }
+
+    // tray on shelf 2, pushed flush against the inner right side panel.
+    let tray = Tray()
+    let trayX = t1 + innerWidth - tray.width
+    let trayY = (innerDepth - tray.depth) / 2
+    tray.colored(Color(hex: "C9A982")) // bamboo
+        .translated(x: trayX, y: trayY, z: shelf2Z).inPart(gearPart)
+
+    // One Confirmat screw laid inside the tray for visual inspection (demo only).
+    // Lying along x, head end at low x, resting on the tray's inner floor.
+    screw
+        .rotated(y: 90°)
+        .translated(
+            x: trayX + 40, // 40mm in from the tray's left wall
+            y: trayY + tray.depth / 2, // centered front-to-back
+            z: shelf2Z + tray.wall + screw.headDiameter / 2
+        )
+        .inPart(gearPart)
+
+    // Small wooden box parked in the back-right corner of the tray interior.
+    let smallBox = WoodenBoxSmall()
+    smallBox
+        .colored(Color(hex: "C9A982")) // bamboo, matching the tray
+        .translated(
+            x: trayX + tray.width - tray.wall - smallBox.width,
+            y: trayY + tray.depth - tray.wall - smallBox.depth,
+            z: shelf2Z + tray.wall
+        )
+        .inPart(gearPart)
+
+    // Vallejo Model Color bottles in a 2×2 grid, centered in the tray.
+    // Hex values are best-effort matches sampled from Encycolorpedia's RGB
+    // swatches (Vallejo doesn't publish official hex).
+    let vallejoColors: [(name: String, hex: String, dx: Double, dy: Double)] = [
+        ("70.939 Smoke",        "937E62", -1, -1), // front-left
+        ("70.915 Deep Yellow",  "F8DB5D",  1, -1), // front-right
+        ("70.875 Beige Brown",  "564744", -1,  1), // back-left
+        ("70.981 Orange Brown", "99624B",  1,  1), // back-right
+    ]
+    let bottleSpacing = 30.0 // center-to-center
+    let bottleGridCenterX = trayX + tray.width / 2
+    let bottleGridCenterY = trayY + tray.depth / 2
+    for v in vallejoColors {
+        VallejoBottle(bottleColor: Color(hex: v.hex))
+            .translated(
+                x: bottleGridCenterX + v.dx * bottleSpacing / 2,
+                y: bottleGridCenterY + v.dy * bottleSpacing / 2,
+                z: shelf2Z + tray.wall
+            )
+            .inPart(gearPart)
+    }
+
+    // Wash bottle in the right-front corner of the tray, spout pointing forward.
+    let washBottle = WashBottle()
+    let washBottleMargin = 10.0
+    washBottle
+        .rotated(z: 180°)
+        .aligned(at: .min)
+        .translated(
+            x: trayX + tray.width - tray.wall - washBottle.width - washBottleMargin,
+            y: trayY + tray.wall + washBottleMargin,
+            z: shelf2Z + tray.wall
+        )
+        .inPart(gearPart)
+
+    // *************************
+    // * STANDING DESK (visual reference, not part of the cutlist)
+    // *************************
+    // Rotated 90° around z so the long side runs along y, then placed behind
+    // the caddy (positive y), x-aligned with the caddy footprint, sitting on
+    // the same floor as the casters (z = -casterHeight at the bottom of the feet).
+    let standingDesk = StandingDesk()
+    let standingDeskGap = 50.0
+    let deskTx = (outerWidth - standingDesk.topDepth) / 2
+    let deskTy = outerDepth + standingDeskGap
+    let deskTz = -casterHeight
+    let deskTopZ = deskTz + standingDesk.deskHeight  // world z of top surface of desktop
+    standingDesk
+        .rotated(z: 90°)
+        .aligned(at: .min)
+        .translated(x: deskTx, y: deskTy, z: deskTz)
+        .inPart(standingDeskPart)
+
+    // *************************
+    // * MONITOR on the standing desk
+    // *************************
+    // Centered on the desktop. Rotated 180° around z so the screen faces +y
+    // (away from the caddy), i.e. toward a viewer standing at the far end.
+    let monitor = Monitor()
+    // Back of the monitor set in from the high-x long edge of the desk,
+    // pulled a few cm toward the front. Y-centered on the desk's long axis.
+    // After 270° rotation the screen normal points -x.
+    let monitorRotated = monitor.rotated(z: 270°).aligned(at: .min)
+    let monitorEdgeInset = 70.0
+    monitorRotated
+        .measuringBounds { geom, box in
+            let deskXMax = deskTx + standingDesk.topDepth
+            let mx = deskXMax - monitorEdgeInset - box.size.x
+            let my = deskTy + (standingDesk.topWidth - box.size.y) / 2
+            return geom.translated(x: mx, y: my, z: deskTopZ)
+        }
+        .inPart(monitorPart)
+
+    // *************************
+    // * DESK MAT + KEYBOARD + TRACKPAD on the standing desk
+    // *************************
+    // Grey felt mat centered on the desk, nudged toward the front (low-x).
+    // 70 × 30 cm, 3 mm thick, long side along the desk's long axis (y).
+    let matWidth = 700.0      // along y (desk long axis)
+    let matDepth = 300.0      // along x (desk short axis)
+    let matThickness = 3.0
+    let matFrontOffset = 130.0 // shift toward the front (low-x) from desk center
+    let matCenterX = deskTx + standingDesk.topDepth / 2 - matFrontOffset
+    let matCenterY = deskTy + standingDesk.topWidth / 2
+
+    Box([matDepth, matWidth, matThickness])
+        .translated(
+            x: matCenterX - matDepth / 2,
+            y: matCenterY - matWidth / 2,
+            z: deskTopZ
+        )
+        .withMaterial(color: Color(hex: "8C8C8C"), metallicness: 0, roughness: 0.95)
+        .inPart(deskMatPart)
+
+    // Keyboard + trackpad side by side on top of the mat (raised by its
+    // thickness), centered on the mat. Keyboard toward +y, trackpad toward -y.
+    // Each is self-centered, then rotated a few degrees off square for a
+    // "real desk" look.
+    let magicKb = MagicKeyboard()
+    let magicTp = MagicTrackpad()
+    let kbTpGap = 50.0
+    let kbTpSpan = magicKb.width + kbTpGap + magicTp.width
+    let kbCenterX = matCenterX
+    let kbCenterY = matCenterY + kbTpSpan / 2 - magicKb.width / 2
+    let tpCenterX = matCenterX
+    let tpCenterY = matCenterY - kbTpSpan / 2 + magicTp.width / 2
+    let inputZ = deskTopZ + matThickness
+
+    magicKb
+        .translated(x: -magicKb.width / 2, y: -magicKb.depth / 2, z: 0)
+        .rotated(z: 96°)
+        .translated(x: kbCenterX, y: kbCenterY, z: inputZ)
+        .inPart(magicKeyboardPart)
+
+    magicTp
+        .translated(x: -magicTp.width / 2, y: -magicTp.depth / 2, z: 0)
+        .rotated(z: 84°)
+        .translated(x: tpCenterX, y: tpCenterY, z: inputZ)
+        .inPart(magicTrackpadPart)
+
+    // *************************
+    // * LAPTOP STAND on the standing desk. Holds MBP 16 and MacBook Neo
+    // * hinge-down, long edge along the desk's long edge (world y). Placed at
+    // * the back, halfway between the desk's middle and its right-back corner
+    // * (right = the -y / caddy-side end, viewed from the keyboard).
+    // *************************
+    let stand = LaptopStand()
+    let macbook = MacBookPro16()
+    let macbookAir = MacBookAir15()
+    let macbookAir13 = MacBookAir13()
+    let macbookNeo = MacBookNeo()
+    let boxCount = 5
+
+    // Stand pushed fully to the back (high-x) edge with a small margin;
+    // 1/4 of the long axis in from the right-back corner along y.
+    let standBackInset = 20.0
+    let standTargetY = deskTy + 0.25 * standingDesk.topWidth
+    // Rotate 90° about z so the long edge runs along world y. The rotated
+    // footprint spans stand.depth in x and stand.width in y. standTx is the
+    // back (max-x) edge; standTy offsets so the y-extent centers on the target.
+    let standTx = deskTx + standingDesk.topDepth - standBackInset
+    let standTy = standTargetY - stand.width / 2
+    let standTz = deskTopZ
+
+    stand
+        .rotated(z: 90°)
+        .translated(x: standTx, y: standTy, z: standTz)
+        .inPart(laptopStandPart)
+
+    // Devices stood vertically in the slots: rotate +90° about x (depth axis
+    // up, thickness across the slot), aligned(.min) onto the slot floor, then
+    // carried through the stand's world transform. MBP in slot 0, Neo in slot 1.
+    macbook
+        .rotated(x: 90°)
+        .aligned(at: .min)
+        .translated(
+            x: (stand.width - macbook.width) / 2,
+            y: stand.slotCenterYs[0] - macbook.thickness / 2,
+            z: stand.slotBottomZ
+        )
+        .rotated(z: 90°)
+        .translated(x: standTx, y: standTy, z: standTz)
+        .inPart(macbookPart)
+
+    macbookNeo
+        .rotated(x: 90°)
+        .aligned(at: .min)
+        .translated(
+            x: (stand.width - macbookNeo.width) / 2,
+            y: stand.slotCenterYs[1] - macbookNeo.thickness / 2,
+            z: stand.slotBottomZ
+        )
+        .rotated(z: 90°)
+        .translated(x: standTx, y: standTy, z: standTz)
+        .inPart(macbookNeoPart)
+
+    // MacBook Airs laid flat on the standing desk for visual size comparison.
+    // Back-left (low-x, high-y) corner with a 30 mm inset, larger under smaller.
+    let mbStackInset = 30.0
+    let mbStackXMin = deskTx + mbStackInset
+    let mbStackYMax = deskTy + standingDesk.topWidth - mbStackInset
+
+    macbookAir
+        .translated(
+            x: mbStackXMin,
+            y: mbStackYMax - macbookAir.depth,
+            z: deskTopZ
+        )
+        .inPart(macbookAirPart)
+
+    macbookAir13
+        .translated(
+            x: mbStackXMin,
+            y: mbStackYMax - macbookAir13.depth,
+            z: deskTopZ + macbookAir.thickness
+        )
+        .inPart(macbookAir13Part)
+
+    // Wooden boxes on shelf 3 — a row spaced evenly across innerWidth,
+    // rotated 90° around z. Centered in y. Each box gets a different
+    // painted color (yellow, kiwi, shock blue, traffic red, blackberry), left to right.
+    let box1 = WoodenBox() // box from cemaco
+    let box1Y = (t1 + innerDepth - box1.width) / 2
+    let boxGap = (innerWidth - Double(boxCount) * box1.depth) / Double(boxCount + 1)
+    let boxColors = [moloSignalYellow, moloKiwi, moloShockBlue, moloTrafficRed, moloBlackberry]
+    for i in 0 ..< boxCount {
+        let x = t1 + boxGap + Double(i) * (box1.depth + boxGap)
+        box1
+            .withMaterial(color: boxColors[i], metallicness: 0, roughness: 0.85)
+            .rotated(z: 90°)
+            .aligned(at: .min)
+            .translated(x: x, y: box1Y, z: shelf3Z)
+            .inPart(gearPart)
+    }
+
+
+    // Top shelf (shelf 4): the big square cemaco box parked on the right
+    // (rotated 90° around z), with three handled boxes lined up on the left.
+    let bigBox = WoodenBoxLarge()
+    let bigBoxX = t1 + innerWidth - boxGap - bigBox.width
+    let bigBoxY = (t1 + innerDepth - bigBox.depth) / 2
+    bigBox
+        .withMaterial(color: moloShockBlue, metallicness: 0, roughness: 0.85)
+        .rotated(z: 90°)
+        .aligned(at: .min)
+        .translated(x: bigBoxX, y: bigBoxY, z: shelf4Z)
+        .inPart(gearPart)
+
+    // Three handled wooden boxes on the left — same box and style as the
+    // shelf 3 row (rotated 90° around z, painted), lined up left-to-right.
+    let leftShelf4Box = WoodenBox()
+    let leftShelf4Colors = [moloSignalYellow, moloKiwi, moloTrafficRed]
+    let leftShelf4Y = (t1 + innerDepth - leftShelf4Box.width) / 2
+    for i in 0 ..< 3 {
+        leftShelf4Box
+            .withMaterial(color: leftShelf4Colors[i], metallicness: 0, roughness: 0.85)
+            .rotated(z: 90°)
+            .aligned(at: .min)
+            .translated(
+                x: t1 + boxGap + Double(i) * (leftShelf4Box.depth + boxGap),
+                y: leftShelf4Y,
+                z: shelf4Z
+            )
+            .inPart(gearPart)
+    }
+
+    // Shelf 2: an extra-large tall box (254×254×152 mm) on the left, in the
+    // strip freed up next to the tray. Rotated 90° around z to match the
+    // shelf-4 big box.
+    let shelf2Box = WoodenBoxXL()
+    shelf2Box
+        .withMaterial(color: moloBlackberry, metallicness: 0, roughness: 0.85)
+        .rotated(z: 90°)
+        .aligned(at: .min)
+        .translated(
+            x: t1 + boxGap,
+            y: (t1 + innerDepth - shelf2Box.depth) / 2,
+            z: shelf2Z
+        )
+        .inPart(gearPart)
+
+    // *************************
+    // * ALUMINIUM PROFILE (visual reference)
+    // *************************
+    // item Profile 5 20x20, standing on the floor to the left of the caddy.
+    TSlotExtrusion()
+        .translated(x: -60, y: outerDepth / 2, z: -casterHeight)
+        .inPart(profilePart)
+}
+
+// Bare plywood cabinet (no gear/hardware), merged into one mesh as caddy.stl.
+await Model("caddy", options: .format3D(.stl)) {
+    Cabinet(dims: CaddyDimensions())
+}
+
+// 2D nesting layout for the plywood sheet, written as SVG into Build/.
+await Model("Nesting", options: .format2D(.svg)) {
+    nesting.geometry
+}
+
+} // end Project
+
+// Cadova emits Nesting.svg as one merged <path>; split it so each piece
+// becomes an independently selectable SVG element, then stamp piece numbers
+// and a legend on top.
+try splitSVGPaths(at: "Build/Caddy/Nesting.svg")
+try annotateNestingSVG(at: "Build/Caddy/Nesting.svg", plan: nesting)
+
+// Frame cutlist, derived from the bounding boxes measured during the build.
+try writeCutlist(cutReg.all, to: "Docs/Caddy/Cutlist.md")
+
+// Confirmat screw positions, per side panel, collected during the build.
+try writeScrews(screwReg.all, to: "Build/Caddy/Screws.md")
