@@ -31,6 +31,8 @@ After painting and curing, assemble per `Assembly.md`.
 goes on flat panels with zero brush marks. Cheap gesso (brushed on)
 makes a perfect primer.
 
+Full colour list with hex swatches: `../Molotow-Premium.md`.
+
 **Per panel (~Q150-200 total):**
 - Artist's gesso, thinned 10-15% with water (~120 mL is plenty)
 - 4" foam mini-roller + small paint tray (for the panel faces)
