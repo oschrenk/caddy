@@ -69,8 +69,10 @@ await Model("caddy") {
     let moloShockBlue    = Color(hex: "59A8CD") // #093 shock blue middle
     let moloTrafficRed   = Color(hex: "D4021E") // #016 traffic red
     let moloBlackberry   = Color(hex: "673C7C") // #068 blackberry
-    let moloDareOrangeLight = Color(hex: "EB6816") // #013 DARE orange light
-    let moloPastelOrange    = Color(hex: "ED7920") // #012 pastel orange
+    // Unused for now — see ../../Docs/Molotow-Premium.md for the full range.
+//  let moloViola        = Color(hex: "6167A2") // #077 viola
+//  let moloDareOrangeLight = Color(hex: "EB6816") // #013 DARE orange light
+//  let moloPastelOrange    = Color(hex: "ED7920") // #012 pastel orange
 
     // *************************
     // * FRAME
