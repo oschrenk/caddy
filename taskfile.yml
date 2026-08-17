@@ -55,3 +55,12 @@ tasks:
     cmds:
       - rm -rf Build/Shoerack
       - rm -f Docs/Shoerack/Cutlist.md
+  build:pila:
+    desc: Build and run the pila lid, producing Build/Pila/pila.3mf
+    cmds:
+      - swift run pila
+  clean:pila:
+    desc: Remove the pila's generated models and cutlist
+    cmds:
+      - rm -rf Build/Pila
+      - rm -f Docs/Pila/Cutlist.md

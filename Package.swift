@@ -8,6 +8,7 @@ let package = Package(
         // Lowercase executable names so each project runs as `swift run caddy`.
         .executable(name: "caddy", targets: ["Caddy"]),
         .executable(name: "shoerack", targets: ["Shoerack"]),
+        .executable(name: "pila", targets: ["Pila"]),
     ],
     dependencies: [
         // see https://github.com/tomasf/Cadova
@@ -33,6 +34,11 @@ let package = Package(
         ),
         .executableTarget(
             name: "Shoerack",
+            dependencies: ["Woodwork", "Cadova", "Helical"],
+            swiftSettings: [.interoperabilityMode(.Cxx)]
+        ),
+        .executableTarget(
+            name: "Pila",
             dependencies: ["Woodwork", "Cadova", "Helical"],
             swiftSettings: [.interoperabilityMode(.Cxx)]
         ),

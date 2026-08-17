@@ -13,6 +13,7 @@ output helpers.
 |---|---|---|---|
 | Caddy — rolling shelf cart | `task build:caddy` | `Build/Caddy/` | `Docs/Caddy/` |
 | Shoerack — tip-out shoe cabinet | `task build:shoerack` | `Build/Shoerack/` | `Docs/Shoerack/` |
+| Pila — wooden lid for the outdoor washing basin | `task build:pila` | `Build/Pila/` | `Docs/Pila/` |
 
 Run tasks from the repo root; the generators write to paths relative to the
 working directory.
