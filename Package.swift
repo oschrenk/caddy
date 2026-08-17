@@ -7,12 +7,13 @@ let package = Package(
     products: [
         // Lowercase executable names so each project runs as `swift run caddy`.
         .executable(name: "caddy", targets: ["Caddy"]),
+        .executable(name: "shoerack", targets: ["Shoerack"]),
     ],
     dependencies: [
         // see https://github.com/tomasf/Cadova
-        .package(url: "https://github.com/tomasf/Cadova.git", exact: "0.8.1"),
+        .package(url: "https://github.com/tomasf/Cadova.git", exact: "0.9.1"),
         // see https://github.com/tomasf/Helical
-        .package(url: "https://github.com/tomasf/Helical.git", exact: "1.0.3"),
+        .package(url: "https://github.com/tomasf/Helical.git", exact: "1.0.4"),
     ],
     targets: [
         // Shared modelling library: gear models used for scale and fit-checking,
