@@ -31,5 +31,10 @@ let package = Package(
             dependencies: ["Woodwork", "Cadova", "Helical"],
             swiftSettings: [.interoperabilityMode(.Cxx)]
         ),
+        .executableTarget(
+            name: "Shoerack",
+            dependencies: ["Woodwork", "Cadova", "Helical"],
+            swiftSettings: [.interoperabilityMode(.Cxx)]
+        ),
     ]
 )

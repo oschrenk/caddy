@@ -11,7 +11,8 @@ output helpers.
 
 | Project | Command | Output | Docs |
 |---|---|---|---|
-| Caddy — rolling shelf cart | `task caddy` | `Build/Caddy/` | `Docs/Caddy/` |
+| Caddy — rolling shelf cart | `task build:caddy` | `Build/Caddy/` | `Docs/Caddy/` |
+| Shoerack — tip-out shoe cabinet | `task build:shoerack` | `Build/Shoerack/` | `Docs/Shoerack/` |
 
 Run tasks from the repo root; the generators write to paths relative to the
 working directory.

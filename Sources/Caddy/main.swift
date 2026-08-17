@@ -550,6 +550,7 @@ await Model("caddy") {
                     endX: acDcPlugX, endY: swFrontY, endZ: acDcPlugZ
                 )
             },
+            pointing: .negativeY,
             toward: cableTarget
         )
         .withMaterial(color: .white, metallicness: 0, roughness: 0.4)
@@ -575,6 +576,7 @@ await Model("caddy") {
                     endX: swCenterX, endY: swFrontY, endZ: unasPlugZ
                 )
             },
+            pointing: .negativeY,
             toward: cableTarget
         )
         .withSegmentation(count: 32)
@@ -604,6 +606,7 @@ await Model("caddy") {
                         endX: plugX, endY: swFrontY, endZ: plugZ
                     )
                 },
+                pointing: .negativeY,
                 toward: cableTarget
             )
             .withSegmentation(count: 32)

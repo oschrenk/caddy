@@ -1,25 +1,20 @@
 version: '3'
-
 tasks:
   default:
     cmds:
-      - task: build
-
-  build:
+      - task: build:all
+  build:all:
     desc: Build all targets
     cmds:
       - swift build
-
   resolve:
     desc: Resolve Swift package dependencies
     cmds:
       - swift package resolve
-
   update:
     desc: Update Swift package dependencies
     cmds:
       - swift package update
-
   clean:
     desc: Remove build artifacts and every project's generated models
     cmds:
@@ -27,7 +22,6 @@ tasks:
       - rm -rf .build
       - rm -rf Build
       - rm -f Docs/*/Cutlist.md
-
   decrypt:
     desc: Pull encrypted assets from LFS and decrypt them
     # ctg only auto-discovers .cottage/identity or ~/.ssh, so point it at the
@@ -38,18 +32,26 @@ tasks:
     cmds:
       - git lfs pull
       - ctg decrypt Assets/*.cott.age
-
-  # ---- Projects ----------------------------------------------------------
+  #
+  # ----- Projects ----
+  #
   # One group per project. Run from the repo root — the generators write to
   # paths relative to the working directory.
-
-  caddy:
+  build:caddy:
     desc: Build and run the caddy, producing Build/Caddy/caddy.3mf
     cmds:
       - swift run caddy
-
-  caddy:clean:
+  clean:caddy:
     desc: Remove the caddy's generated models and cutlist
     cmds:
       - rm -rf Build/Caddy
       - rm -f Docs/Caddy/Cutlist.md
+  build:shoerack:
+    desc: Build and run the shoe rack, producing Build/Shoerack/shoerack.3mf
+    cmds:
+      - swift run shoerack
+  clean:shoerack:
+    desc: Remove the shoe rack's generated models and cutlist
+    cmds:
+      - rm -rf Build/Shoerack
+      - rm -f Docs/Shoerack/Cutlist.md
