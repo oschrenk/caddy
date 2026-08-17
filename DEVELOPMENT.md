@@ -145,14 +145,6 @@ git push
 
 The new machine can now `git pull && ctg decrypt Assets/*.cott.age`.
 
-## Dependencies
-
-Cadova is pinned to its `dev` branch (see `Package.swift`). SwiftPM does **not** automatically pick up new commits on a branch — `Package.resolved` locks the specific revision. To advance to the latest commit on `dev`:
-
-```sh
-task update     # swift package update
-```
-
 ## Reference
 
 | Command | Purpose |
