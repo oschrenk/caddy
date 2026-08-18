@@ -3,6 +3,6 @@
 /Build/
 /Docs/*/Cutlist.md
 /.cottage/identity
-/Assets/Headphones.stl
-/Assets/Tower.stl
-/Assets/Raspberry Pi 4 Model B.stl
+/Assets/models/Headphones.stl
+/Assets/models/Tower.stl
+/Assets/models/Raspberry Pi 4 Model B.stl
