@@ -28,11 +28,11 @@ public struct PiRack: Shape3D {
     public init() {}
 
     public var body: any Geometry3D {
-        let pi = Import(model: "Assets/Raspberry Pi 4 Model B.stl")
+        let pi = Import(model: "Assets/models/Raspberry Pi 4 Model B.stl")
             .rotated(x: 90°)
             .rotated(z: 90°)
             .withMaterial(color: Color(hex: "50A03C"), metallicness: 0.3, roughness: 0.55)
-        let tower = Import(model: "Assets/Tower.stl")
+        let tower = Import(model: "Assets/models/Tower.stl")
             .rotated(z: 90°)
             .colored(.white, alpha: 0.5)
 

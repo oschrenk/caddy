@@ -31,7 +31,7 @@ task caddy    # swift run caddy → writes Build/Caddy/caddy.3mf
 Run it from the repo root — the generators write to paths relative to the
 working directory.
 
-The build **requires the decrypted `Assets/*.stl` files** — the model loads
+The build **requires the decrypted `Assets/models/*.stl` files** — the model loads
 `Tower.stl`, `Headphones.stl`, and `Raspberry Pi 4 Model B.stl` at generate
 time. On a fresh clone these are encrypted, so run `task decrypt` first (see
 [Decrypting](#decrypting)). If you skip it, the build fails with:
@@ -57,7 +57,7 @@ caddy's).
 
 ## Encrypted assets
 
-Files in `Assets/` (third-party STLs) are stored as age-encrypted blobs via [cottage](https://github.com/sayanarijit/cottage):
+Files in `Assets/models/` (third-party STLs) are stored as age-encrypted blobs via [cottage](https://github.com/sayanarijit/cottage):
 
 - `*.cott.age` — encrypted binary, tracked via git LFS
 - `*.cott.toml` — plain-text metadata (checksums, recipients)
@@ -106,7 +106,7 @@ age-keygen -y ~/.config/cottage/identity
 > `~/.ssh` — **not** `~/.config/cottage/identity`. `task decrypt` handles this
 > for you by exporting `COTTAGE_IDENTITY` when the global identity exists. If
 > you run `ctg` directly, point it there yourself:
-> `ctg decrypt -i ~/.config/cottage/identity Assets/*.cott.age`.
+> `ctg decrypt -i ~/.config/cottage/identity Assets/models/*.cott.age`.
 
 ## Decrypting
 
@@ -115,8 +115,8 @@ task decrypt
 ```
 
 Runs `git lfs pull` (the `*.cott.age` files are LFS-tracked, so a plain clone
-only has pointer stubs) then `ctg decrypt Assets/*.cott.age`, leaving plaintext
-STLs in `Assets/`. It auto-uses `~/.config/cottage/identity` if present.
+only has pointer stubs) then `ctg decrypt Assets/models/*.cott.age`, leaving plaintext
+STLs in `Assets/models/`. It auto-uses `~/.config/cottage/identity` if present.
 
 For one-shot use with no plaintext left on disk:
 
@@ -138,12 +138,12 @@ On a machine that **can already decrypt**, re-encrypt for the new recipient:
 ```sh
 git pull
 ctg sync           # re-encrypts everything for the updated recipient list
-git add .cottage/recipients Assets/*.cott.age Assets/*.cott.toml
+git add .cottage/recipients Assets/models/*.cott.age Assets/models/*.cott.toml
 git commit -m "Add recipient"
 git push
 ```
 
-The new machine can now `git pull && ctg decrypt Assets/*.cott.age`.
+The new machine can now `git pull && ctg decrypt Assets/models/*.cott.age`.
 
 ## Reference
 

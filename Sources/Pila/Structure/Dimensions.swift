@@ -87,7 +87,13 @@ struct PilaDimensions {
     let slatThickness: Double
     let cleatWidth: Double
     let cleatMinHeight: Double // clearance at the low corner, over wet concrete
-    let lidOverhang: Double // oversail on the two low edges
+    let lidOverhang: Double // oversail on left, right and front
+    // Drip groove — currently unused. Kept for a solid-lid variant, where water
+    // does sheet across the surface to the edges. On a slatted deck the gaps
+    // drain it long before it gets there. See the note in `SlatDeck`.
+    let dripGrooveInset: Double // groove distance from the overhang edge
+    let dripGrooveWidth: Double // saw kerf
+    let dripGrooveDepth: Double
     let lidFallX: Double // drop across the 1000 mm run
     let lidFallY: Double // drop across the 770 mm run
 
@@ -121,7 +127,10 @@ struct PilaDimensions {
         cleatWidth: Double = 35.0,
         // 10 rather than 15, for the same reason. Still a real air gap.
         cleatMinHeight: Double = 10.0,
-        lidOverhang: Double = 30.0,
+        lidOverhang: Double = 15.0,
+        dripGrooveInset: Double = 8.0,
+        dripGrooveWidth: Double = 3.0,
+        dripGrooveDepth: Double = 4.0,
         lidFallX: Double = 20.0,
         // Charged in full against the spout headroom, because the spout sits at
         // y-max — unlike the x-fall, which is 74% spent by the time it gets
@@ -150,6 +159,9 @@ struct PilaDimensions {
         self.cleatWidth = cleatWidth
         self.cleatMinHeight = cleatMinHeight
         self.lidOverhang = lidOverhang
+        self.dripGrooveInset = dripGrooveInset
+        self.dripGrooveWidth = dripGrooveWidth
+        self.dripGrooveDepth = dripGrooveDepth
         self.lidFallX = lidFallX
         self.lidFallY = lidFallY
     }

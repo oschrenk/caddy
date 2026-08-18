@@ -57,9 +57,27 @@ struct SlatDeck: Geometry3D {
             }
         }
 
-        // Shifted so the deck oversails the front (-y) edge of the block, then
-        // tilted onto the same plane the cleats define: falling toward +x and
-        // toward -y, so the low corner is x = max, y = min.
+        // No drip grooves. On a *slatted* deck they earn almost nothing: water
+        // travels at most 35 mm before reaching a 9.4 mm gap and dropping into
+        // the basin, so only the front slat ever sheds along an edge — roughly
+        // 9% of the rain. The two side grooves would also run cross-grain and
+        // land 8 mm from the thirstiest end grain on the lid.
+        //
+        // **If this ever becomes a full solid lid, put them back.** Then water
+        // genuinely does sheet across the surface to the edges, and a groove
+        // 8 mm in from each overhang edge (3 mm wide × 4 mm deep, cut in the
+        // underside before tilting) stops it curling around the edge and
+        // tracking back inward. `dripGrooveInset/Width/Depth` are still in
+        // `PilaDimensions` for exactly that case — see the git history of this
+        // file for the geometry.
+        //
+        // The cleats keep their bevel regardless. That answers a different and
+        // real path: water running down a cleat's side, curling under a square
+        // bottom edge, into the one interface that must stay dry.
+
+        // Shifted so the deck oversails the left and front edges of the block,
+        // then tilted onto the same plane the cleats define: falling toward +x
+        // and toward -y, so the low corner is x = max, y = min.
         deck
             .translated(x: -dims.lidLeftOverhang, y: -dims.lidFrontOverhang)
             .rotated(x: dims.lidSlopeY, y: dims.lidSlopeX)

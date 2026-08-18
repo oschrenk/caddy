@@ -31,7 +31,7 @@ tasks:
         sh: 'test -f "$HOME/.config/cottage/identity" && echo "$HOME/.config/cottage/identity" || echo "${COTTAGE_IDENTITY:-}"'
     cmds:
       - git lfs pull
-      - ctg decrypt Assets/*.cott.age
+      - ctg decrypt Assets/models/*.cott.age
   #
   # ----- Projects ----
   #
@@ -64,3 +64,12 @@ tasks:
     cmds:
       - rm -rf Build/Pila
       - rm -f Docs/Pila/Cutlist.md
+  build:couch:
+    desc: Build and run the couch, producing Build/Couch/couch.3mf
+    cmds:
+      - swift run couch
+  clean:couch:
+    desc: Remove the couch's generated models and cutlist
+    cmds:
+      - rm -rf Build/Couch
+      - rm -f Docs/Couch/Cutlist.md

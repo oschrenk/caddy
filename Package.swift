@@ -9,6 +9,7 @@ let package = Package(
         .executable(name: "caddy", targets: ["Caddy"]),
         .executable(name: "shoerack", targets: ["Shoerack"]),
         .executable(name: "pila", targets: ["Pila"]),
+        .executable(name: "couch", targets: ["Couch"]),
     ],
     dependencies: [
         // see https://github.com/tomasf/Cadova
@@ -39,6 +40,11 @@ let package = Package(
         ),
         .executableTarget(
             name: "Pila",
+            dependencies: ["Woodwork", "Cadova", "Helical"],
+            swiftSettings: [.interoperabilityMode(.Cxx)]
+        ),
+        .executableTarget(
+            name: "Couch",
             dependencies: ["Woodwork", "Cadova", "Helical"],
             swiftSettings: [.interoperabilityMode(.Cxx)]
         ),

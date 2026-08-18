@@ -14,6 +14,7 @@ output helpers.
 | Caddy — rolling shelf cart | `task build:caddy` | `Build/Caddy/` | `Docs/Caddy/` |
 | Shoerack — tip-out shoe cabinet | `task build:shoerack` | `Build/Shoerack/` | `Docs/Shoerack/` |
 | Pila — wooden lid for the outdoor washing basin | `task build:pila` | `Build/Pila/` | `Docs/Pila/` |
+| Couch — scaffold only, no design yet | `task build:couch` | `Build/Couch/` | `Docs/Couch/` |
 
 Run tasks from the repo root; the generators write to paths relative to the
 working directory.
@@ -27,7 +28,9 @@ for live reload.
 Sources/
   Woodwork/     shared library — Gear/, Hardware/, Output/
   Caddy/        the caddy — Structure/, Nesting.swift, main.swift
-Assets/         shared third-party STLs (encrypted, see DEVELOPMENT.md)
+Assets/
+  models/       shared third-party STLs (encrypted, see DEVELOPMENT.md)
+  inspiration/<Project>/  reference images, not used by the build
 Docs/<Project>/ hand-written build docs + generated cutlist
 Build/<Project>/ generated models (gitignored)
 ```

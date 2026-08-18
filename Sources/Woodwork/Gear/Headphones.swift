@@ -11,7 +11,7 @@ public struct Headphones: Shape3D {
     public init() {}
 
     public var body: any Geometry3D {
-        Import(model: "Assets/Headphones.stl")
+        Import(model: "Assets/models/Headphones.stl")
             .scaled(x: width / 27.46, y: depth / 28.95, z: height / 24.16)
             .colored(Color(hex: "2A2A2A"))
     }

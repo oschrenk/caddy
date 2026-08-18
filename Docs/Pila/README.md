@@ -122,5 +122,5 @@ lumber is a separate catalogue.
 1. Which species for the slats, and whether anyone sells it near 70 × 20 mm or
    it must be ripped from bigger stock.
 2. Handle — one on the high edge, or a grip cut into the end slat.
-3. Whether the cleats want a drip groove underneath, to stop water tracking back
+3. Whether the cleats want a bevel on their bottom arris, to stop water tracking back
    along the timber to the rim.
