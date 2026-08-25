@@ -52,4 +52,15 @@ await Project(root: "Build/Shoerack") {
         rack()
     }
 
+    // The tip-out fitting's steel side plate, recreated from the vendor STEP.
+    // Two of these per front, mirrored. Its own model rather than part of the
+    // rack, since where it lands depends on the pivot bores, which are open.
+    await Model("hinge") {
+        FlipDrawerHinge()
+    }
+
+    await Model("hinge", options: .format3D(.stl)) {
+        FlipDrawerHinge()
+    }
+
 } // end Project
