@@ -21,9 +21,10 @@ func rack() -> any Geometry3D {
         Carcass(dims: dims, name: "Carcass 1", row: 1)
     }
 
+    // The two narrow boxes stay plain — no tip-out fitting in either.
     row(2) {
-        Carcass(dims: dims, name: "Carcass 2a", row: 2, width: dims.carcassWidth / 2)
-        Carcass(dims: dims, name: "Carcass 2b", row: 2, width: dims.carcassWidth / 2)
+        Carcass(dims: dims, name: "Carcass 2a", row: 2, width: dims.carcassWidth / 2, hinged: false)
+        Carcass(dims: dims, name: "Carcass 2b", row: 2, width: dims.carcassWidth / 2, hinged: false)
             .translated(x: dims.carcassWidth / 2)
     }
 

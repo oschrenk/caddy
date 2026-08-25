@@ -16,19 +16,22 @@ import Cadova
 /// `width`, which defaults to the full carcass but can be halved.
 ///
 /// The tip-out fitting's two side plates are mounted inside, one against each
-/// side panel. No fronts or pivot bores yet — those land once the fitting is
+/// side panel — unless `hinged` is off, which is how the narrow boxes stay
+/// plain. No fronts or pivot bores yet — those land once the fitting is
 /// measured in hand rather than off a spec sheet.
 struct Carcass: Geometry3D {
     let dims: ShoerackDimensions
     let name: String // labels this box's parts, e.g. "Carcass 2a"
     let row: Int // 1-based position in the stack, picks the tint
     let width: Double
+    let hinged: Bool // whether this box gets the tip-out fitting
 
-    init(dims: ShoerackDimensions, name: String, row: Int, width: Double? = nil) {
+    init(dims: ShoerackDimensions, name: String, row: Int, width: Double? = nil, hinged: Bool = true) {
         self.dims = dims
         self.name = name
         self.row = row
         self.width = width ?? dims.carcassWidth
+        self.hinged = hinged
     }
 
     /// Clear width inside this box. Both sides are housed between the caps, so
@@ -55,7 +58,9 @@ struct Carcass: Geometry3D {
             .translated(x: t, y: dims.innerDepth, z: t)
             .inPart(part("Back", tint: 4))
 
-        hinges
+        if hinged {
+            hinges
+        }
     }
 
     /// The tip-out fitting: one steel side plate against each side panel, the
