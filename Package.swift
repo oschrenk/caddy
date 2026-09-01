@@ -13,7 +13,7 @@ let package = Package(
     ],
     dependencies: [
         // see https://github.com/tomasf/Cadova
-        .package(url: "https://github.com/tomasf/Cadova.git", exact: "0.9.1"),
+        .package(url: "https://github.com/tomasf/Cadova.git", exact: "0.9.3"),
         // see https://github.com/tomasf/Helical
         .package(url: "https://github.com/tomasf/Helical.git", exact: "1.0.4"),
     ],

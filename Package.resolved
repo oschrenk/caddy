@@ -1,5 +1,5 @@
 {
-  "originHash" : "776d9bc43cfcd867e1789e1c03946d2924d334446a01fae4631f54c7ab2cac7a",
+  "originHash" : "857b051d2b404b5671c8932daf4a1d3e6c5bcca06afaa961219b5a8f19d1273f",
   "pins" : [
     {
       "identity" : "apus",
@@ -15,8 +15,17 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/tomasf/Cadova.git",
       "state" : {
-        "revision" : "5aa45a17f4ae09422d55d539910b58d4473924f8",
-        "version" : "0.9.1"
+        "revision" : "df05b090f96265a23bff712b5092096c59dfc9f6",
+        "version" : "0.9.3"
+      }
+    },
+    {
+      "identity" : "cadovalivelink",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/tomasf/CadovaLiveLink.git",
+      "state" : {
+        "revision" : "4e6cdee60cecf1cde2204578485445533ad0324b",
+        "version" : "0.2.1"
       }
     },
     {
@@ -60,8 +69,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/tomasf/ThreeMF.git",
       "state" : {
-        "revision" : "15765bd9e3859e2884385a79e6d2e34686b42fb1",
-        "version" : "0.2.5"
+        "revision" : "05391c47c4f8579a2dbd50d060aab76178a91a90",
+        "version" : "0.3.0"
       }
     },
     {
