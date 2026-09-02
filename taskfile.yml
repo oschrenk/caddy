@@ -73,3 +73,11 @@ tasks:
     cmds:
       - rm -rf Build/Couch
       - rm -f Docs/Couch/Cutlist.md
+  build:routerbase:
+    desc: Build and run the router base, producing Build/RouterBase/router-square-base.3mf
+    cmds:
+      - swift run routerbase
+  clean:routerbase:
+    desc: Remove the router base's generated models
+    cmds:
+      - rm -rf Build/RouterBase
